@@ -29,7 +29,7 @@ export class GooglePhotosScraper {
         if (fs.existsSync(COOKIES_PATH)) {
             const cookies = await fs.readJson(COOKIES_PATH);
             if (this.page) {
-                await this.page.setCookie(...cookies);
+                await this.browser?.setCookie(...cookies);
                 console.log("✅ Cookies loaded successfully.");
             }
         } else {
@@ -41,7 +41,7 @@ export class GooglePhotosScraper {
     async login() {
         if (!this.page) throw new Error("Puppeteer page not initialized.");
 
-        await this.page.goto("https://photos.google.com/", {
+        await this.page.goto("https://photos.google.com/login", {
             waitUntil: "networkidle2",
         });
 
@@ -57,7 +57,7 @@ export class GooglePhotosScraper {
         await this.page.waitForNavigation({ waitUntil: "networkidle2" });
 
         // Save session cookies after login
-        const cookies = await this.page.cookies();
+        const cookies = await this.browser?.defaultBrowserContext().cookies();
         await fs.writeJson(COOKIES_PATH, cookies);
         console.log("✅ Cookies saved for future sessions.");
     }
@@ -66,11 +66,11 @@ export class GooglePhotosScraper {
     async accessAlbums() {
         if (!this.page) throw new Error("Puppeteer page not initialized.");
 
-        await this.page.goto("https://photos.google.com/albums", {
+        await this.page.goto("https://photos.google.com/", {
             waitUntil: "networkidle2",
         });
 
-        console.log("📸 Accessed Google Photos albums.");
+        console.log("📸 Accessed Google Photos.");
     }
 
     /** ✅ Extract album details */

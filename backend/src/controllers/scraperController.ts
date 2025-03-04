@@ -13,7 +13,8 @@ export const scrapeGooglePhotos = async (req: Request, res: Response) => {
         res.json({ success: true, albums });
     } catch (error) {
         console.error("❌ Error scraping Google Photos:", error);
-        res.status(500).json({ success: false, error: error.message });
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        res.status(500).json({ success: false, error: errorMessage });
     } finally {
         await scraper.close();
     }
