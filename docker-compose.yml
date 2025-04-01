@@ -1,54 +1,52 @@
+version: '3.9'
+
 services:
-  web:
-    build: .
-    container_name: fastapi_app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    volumes:
-      - .:/app
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-      - redis
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  worker:
-    build: .
-    container_name: celery_worker
-    command: celery -A app.worker.celery worker --loglevel=info
-    volumes:
-      - .:/app
-    depends_on:
-      - redis
-      - db
-
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-
   db:
     image: postgres:15
-    container_name: postgres
+    restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: duplicatefinder
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/duplicatefinder
+    depends_on:
+      - db
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A backend.services.worker.celery worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - app
+      - redis
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/duplicatefinder
+      - CELERY_BROKER_URL=redis://redis:6379/0
+
 volumes:
   postgres_data:
-
-

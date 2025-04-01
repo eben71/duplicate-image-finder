@@ -5,3 +5,5 @@ sqlalchemy
 celery[redis]
 pytest
 httpx
+alembic
+python-dotenv

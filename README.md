@@ -67,7 +67,7 @@ curl http://localhost:8000/health
 
 ```
 project-root/
-├── app/              # FastAPI app and Celery tasks
+├── backend/          # FastAPI app and Celery tasks
 ├── tests/            # Test cases (pytest)
 ├── Dockerfile
 ├── docker-compose.yml
@@ -79,8 +79,8 @@ project-root/
 
 ## 🧼 Extras
 - Update `.env` file for custom config
-- Create DB models in `app/models`
-- Add new tasks in `app/worker/tasks.py`
+- Create DB models in `backend/models`
+- Add new tasks in `backend/worker/tasks.py`
 
 ---
 

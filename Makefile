@@ -1,6 +1,6 @@
 # ✅ Makefile for Dev Workflow
 
-.PHONY: build up down restart logs web worker bash test
+.PHONY: build up down restart logs alembic migrate shell celery
 
 build:
 	docker-compose build
@@ -16,17 +16,17 @@ restart: down up
 logs:
 	docker-compose logs -f
 
-web:
-	docker exec -it fastapi_app bash
-
-worker:
-	docker exec -it celery_worker bash
-
-bash:
-	docker exec -it fastapi_app bash
-
-test:
-	docker exec -it fastapi_app pytest
-
 health:
 	curl -f http://localhost:8000/health
+
+alembic:
+	alembic -c backend/alembic.ini revision --autogenerate -m "$(m)"
+
+migrate:
+	alembic -c backend/alembic.ini upgrade head
+
+shell:
+	docker-compose exec app bash
+
+celery:
+	docker-compose exec worker celery -A backend.services.worker.celery worker --loglevel=info

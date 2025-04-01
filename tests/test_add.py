@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
-from app.main import app
+from backend.main import backend
 
-client = TestClient(app)
+client = TestClient(backend)
 
 def test_add_task():
     response = client.post("/add", json={"x": 1, "y": 2})
