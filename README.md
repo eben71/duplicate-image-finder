@@ -33,25 +33,32 @@ Access FastAPI docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ## 🛠️ Common Commands
 
-| Command           | Description                      |
-|------------------|----------------------------------|
-| `make up`        | Start all services               |
-| `make down`      | Stop and remove containers       |
-| `make restart`   | Rebuild and restart everything   |
-| `make logs`      | Tail logs                        |
-| `make web`       | Bash into FastAPI container      |
-| `make worker`    | Bash into Celery worker          |
-| `make test`      | Run pytest inside web container  |
-| `make health`    | Hit the /health endpoint         |
+| Command           | Description                                      |
+|------------------|--------------------------------------------------|
+| `make build`     | Build all Docker images                         |
+| `make up`        | Start all services (app, db, redis, worker)     |
+| `make down`      | Stop and remove containers and volumes          |
+| `make restart`   | Rebuild and restart everything                  |
+| `make logs`      | Tail logs from all running containers           |
+| `make health`    | Ping the FastAPI `/health` endpoint             |
+| `make alembic`   | Create new Alembic migration (use `m="msg"`)   |
+| `make migrate`   | Apply latest Alembic migrations                 |
+| `make shell`     | Open bash shell in the app container            |
+| `make celery`    | Start Celery worker in the worker container     |
+| `make test`      | Run tests with coverage inside app container    |
 
 ---
 
 ## 🧪 Testing
 
-Add test files under `tests/` and run:
+Run your tests inside the container:
+
 ```bash
 make test
 ```
+
+This runs `pytest` with coverage inside the `app` container.
+Make sure all test files are located in the `tests/` folder.
 
 ---
 

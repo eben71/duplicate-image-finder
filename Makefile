@@ -1,6 +1,6 @@
 # ✅ Makefile for Dev Workflow
 
-.PHONY: build up down restart logs alembic migrate shell celery
+.PHONY: build up down restart logs alembic migrate shell celery test
 
 build:
 	docker-compose build
@@ -30,3 +30,7 @@ shell:
 
 celery:
 	docker-compose exec worker celery -A backend.services.worker.celery worker --loglevel=info
+
+test:
+	docker-compose run --rm app pytest tests --cov=backend --disable-warnings
+
