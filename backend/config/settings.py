@@ -1,10 +1,10 @@
-from pydantic import BaseSettings, FilePath
+from pydantic_settings import BaseSettings
 from typing import Optional
 
 class Settings(BaseSettings):
     database_url: str
     celery_broker_url: str
-    celery_result_backend: str
+    celery_backend_url: str
     session_cookie_path: Optional[str] = "~/.gp_session.json"
     ingestion_mode: str = "scrape"
 

@@ -5,7 +5,15 @@ sqlalchemy
 celery[redis]
 alembic
 python-dotenv
+sqlmodel
+pydantic-settings
+numpy
+Pillow
+opencv-python
+scikit-image
+pytest-asyncio
+pytest-cov
 pytest
 httpx
-pytest-asyncio
-sqlmodel
+
+

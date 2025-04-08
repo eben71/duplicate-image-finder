@@ -20,16 +20,16 @@ health:
 	curl -f http://localhost:8000/health
 
 alembic:
-	alembic -c backend/alembic.ini revision --autogenerate -m "$(m)"
+	docker-compose exec app alembic -c backend/alembic.ini revision --autogenerate -m "$(m)"
 
 migrate:
-	alembic -c backend/alembic.ini upgrade head
+	docker-compose exec app alembic -c backend/alembic.ini upgrade head
 
 shell:
 	docker-compose exec app bash
 
 celery:
-	docker-compose exec worker celery -A backend.services.worker.celery worker --loglevel=info
+	docker-compose exec worker celery -A backend.services.worker.celery_app worker --loglevel=info
 
 test:
 	docker-compose run --rm app pytest tests --cov=backend --disable-warnings

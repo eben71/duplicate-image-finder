@@ -4,7 +4,7 @@ from backend.config.settings import settings
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Duplicate Image Finder")
-app.include_router(tasks.router, prefix="/api")
+app.include_router(router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

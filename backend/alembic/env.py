@@ -2,10 +2,11 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
+from sqlmodel import SQLModel
+
 from backend.models.user import User
 from backend.models.image import Image
 from backend.models.embedding import ImageEmbedding
-from sqlmodel import SQLModel
 
 from logging.config import fileConfig
 

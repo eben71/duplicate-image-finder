@@ -86,6 +86,8 @@ project-root/
 
 ## 🧼 Extras
 - Update `.env` file for custom config
+   (To get the localhost IP address for DB: docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' duplicate-image-finder-db-1
+)
 - Create DB models in `backend/models`
 - Add new tasks in `backend/worker/tasks.py`
 

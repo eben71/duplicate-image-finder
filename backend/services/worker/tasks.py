@@ -1,10 +1,10 @@
 import numpy as np
-from backend.services.worker.celery import celery
+from backend.services.worker.celery_app import celery_app
 from backend.models.embedding import ImageEmbedding
 from backend.db.session import engine
 from sqlmodel import Session
 
-@celery.task
+@celery_app.task
 def generate_embedding(image_id: int):
     """
     Simulates generating a 512-dim embedding and stores it.
