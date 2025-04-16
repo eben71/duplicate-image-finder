@@ -20,10 +20,10 @@ health:
 	curl -f http://localhost:8000/health
 
 alembic:
-	docker-compose exec app alembic -c backend/alembic.ini revision --autogenerate -m "$(m)"
+	docker-compose exec app alembic -c /app/backend/alembic.ini revision --autogenerate -m "$(m)"
 
 migrate:
-	docker-compose exec app alembic -c backend/alembic.ini upgrade head
+	docker-compose exec app alembic -c /app/backend/alembic.ini upgrade head
 
 shell:
 	docker-compose exec app bash
