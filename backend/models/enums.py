@@ -1,6 +1,6 @@
-from enum import Enum
+import enum
 
-class IngestionMode(str, Enum):
+class IngestionMode(enum.Enum):
     SCRAPE = "scrape"
-    API = "api"
     UPLOAD = "upload"
+    API = "api"

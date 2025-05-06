@@ -6,11 +6,11 @@
 This is a boilerplate backend stack for building a scalable image processing app.
 
 ## 🔧 Tech Stack
-- FastAPI (web API)
-- Celery (background task queue)
-- Redis (broker & result backend)
-- PostgreSQL (data persistence)
-- Docker Compose (container orchestration)
+- **FastAPI**: Backend API (`/api`-prefixed endpoints)
+- **Celery + Redis**: Background processing for image embeddings
+- **PostgreSQL**: Stores users, image metadata, embeddings
+- **Docker + Makefile**: Development and CI-ready environment
+- **SQLModel + Alembic**: Declarative models with migration support
 
 ---
 
@@ -73,14 +73,47 @@ curl http://localhost:8000/health
 ## 📦 Folder Structure
 
 ```
-project-root/
-├── backend/          # FastAPI app and Celery tasks
-├── tests/            # Test cases (pytest)
-├── Dockerfile
+.
+├── backend/
+│   ├── api/                  # Routes
+│   ├── models/               # SQLModel models
+│   ├── services/             # Business logic
+│   ├── config/               # Enums and constants
+│   ├── alembic.ini
+│   ├── alembic/              # DB migrations
+│   │   ├── versions/
+│   │   └── env.py
 ├── docker-compose.yml
 ├── Makefile
+├── SETUP.md
 ├── README.md
 ```
+---
+
+### Database Models:
+- `User`: Represents registered users.
+- `Image`: Stores user image metadata and file paths.
+- `IngestionMode`: Enum with `SCRAPE`, `API`, and `UPLOAD`.
+
+---
+
+## 🧠 Lessons Learned
+
+### Alembic + SQLModel:
+- Define `target_metadata = SQLModel.metadata` in `env.py`
+- Use absolute imports (e.g., `from backend.models import User`)
+- Alembic fails if database isn't upgraded before generating new revisions
+
+### File Structure Best Practices:
+- Place `alembic.ini` under `backend/`
+- Run Alembic commands from `/app` in Docker using:  
+  `alembic -c /app/backend/alembic.ini ...`
+- Ensure `/backend/alembic/versions/` exists and is writable
+
+### Common Errors Avoided:
+- `NameError: Optional not defined`: Ensure `from typing import Optional`
+- `ModuleNotFoundError: No module named 'backend'`: Set `PYTHONPATH=/app`
+- Git ignores empty dirs — add a `.gitkeep` or dummy file to `versions/`
 
 ---
 
