@@ -1,0 +1,57 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test-lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    # ---- 1. Define a build matrix if you want to test multiple interpreters ----
+    strategy:
+      matrix:
+        python-version: ["3.12"]   # add 3.11 here later if you wish
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: "pip"  
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [[ -f requirements.txt ]]; then
+          pip install -r requirements.txt
+        elif [[ -f pyproject.toml ]]; then
+          pip install .[dev]  || pip install -r requirements-dev.txt
+        fi
+
+    - name: Lint (ruff) & style (black --check)
+      run: |
+        ruff .                 # fast linter / formatter
+        black --check .
+
+    # Optional static typing
+    - name: Type check (mypy)
+      run: |
+        mypy .
+
+    - name: Run tests
+      run: |
+        pytest -q --exitfirst --maxfail=1
+
+    # Build Docker image so the *Dockerfile* never silently breaks
+    - name: Docker build (no push)
+      run: |
+        docker build -t duplicate-image-finder:test .
