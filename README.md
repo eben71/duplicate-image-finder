@@ -1,4 +1,3 @@
-# ------------------------------------------------------------------------------------------------
 # ✅ README.md
 
 # Duplicate Image Finder Backend (FastAPI + Celery + Redis + Postgres)
