@@ -9,11 +9,13 @@ sqlmodel
 pydantic-settings
 numpy
 Pillow
+playwright
 opencv-python
 scikit-image
 pytest-asyncio
 pytest-cov
 pytest
 httpx
+
 
 
