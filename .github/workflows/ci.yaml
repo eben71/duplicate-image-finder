@@ -38,9 +38,9 @@ jobs:
           pip install .[dev]  || pip install -r requirements-dev.txt
         fi
 
-    - name: Lint (ruff) & style (black --check)
-      run: |
-        # Ruff linter
+    - name: Lint & style checks
++      run: |
++       # Ruff linter
 +       ruff check .
 +       # Ruff formatter in “check-only” mode (optional but nice)
 +       ruff format --check .
