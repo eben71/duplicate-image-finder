@@ -41,7 +41,9 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = os.getenv("DATABASE_URL", settings.database_url)
+    engine = create_engine(url, pool_pre_ping=True, future=True)
+
     context.configure(
         url=url,
         target_metadata=target_metadata,

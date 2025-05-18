@@ -30,7 +30,7 @@ jobs:
           --health-retries=5
 
     env:
-      DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+      DATABASE_URL: postgresql://testuser:testpass@postgres:5432/testdb
 
     # ---- 1. Define a build matrix if you want to test multiple interpreters ----
     strategy:
