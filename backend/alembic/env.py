@@ -29,9 +29,12 @@ target_metadata = SQLModel.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
-db_url = os.getenv("DATABASE_URL", settings.database_url)
+db_url = os.getenv("DATABASE_URL")
+if not db_url:
+    # Local dev fallback – only executed when the env-var is missing
+    from backend.config.settings import settings
+    db_url = settings.database_url
 config.set_main_option("sqlalchemy.url", db_url)
-
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
