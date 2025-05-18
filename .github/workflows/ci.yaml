@@ -60,7 +60,7 @@ jobs:
     # ---------- 🛠️  Alembic smoke-test ----------
     - name: Run Alembic migrations
       run: |
-        alembic upgrade head
+        alembic -c backend/alembic.ini upgrade head
         alembic revision --autogenerate -m "check" && \
           test -z "$(git status --porcelain | grep migrations)" || \
           (echo "Missing migration!" && exit 1)
