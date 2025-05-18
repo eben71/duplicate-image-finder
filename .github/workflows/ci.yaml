@@ -31,7 +31,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install ruff
+        pip install --upgrade ruff black mypy pytest
         if [[ -f requirements.txt ]]; then
           pip install -r requirements.txt
         elif [[ -f pyproject.toml ]]; then
@@ -40,12 +40,12 @@ jobs:
 
     - name: Lint (ruff) & style (black --check)
       run: |
-        ruff .                 # fast linter / formatter
-        black --check .
-
-    # Optional static typing
-    - name: Type check (mypy)
-      run: |
+        # Ruff linter
++       ruff check .
++       # Ruff formatter in “check-only” mode (optional but nice)
++       ruff format --check .
++       # Black formatter
++       black --check .
         mypy .
 
     - name: Run tests
