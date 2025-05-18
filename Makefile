@@ -23,7 +23,7 @@ reset-db:
 	docker-compose down -v
 	rm -f backend/alembic/versions/*.py
 	docker-compose up -d
-	sleep 5  # give Postgres time to boot
+	docker compose wait postgres
 	docker-compose exec app python -c "from sqlmodel import SQLModel; from backend.db import engine; SQLModel.metadata.create_all(engine)"
 
 alembic:

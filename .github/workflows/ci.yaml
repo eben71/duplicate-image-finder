@@ -13,6 +13,25 @@ jobs:
       run:
         shell: bash
 
+    services:
+      postgres:
+        image: postgres:16
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        # GitHub skips to next step only when health-check passes
+        options: >-
+          --health-cmd="pg_isready -U testuser -d testdb"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+
     # ---- 1. Define a build matrix if you want to test multiple interpreters ----
     strategy:
       matrix:
@@ -38,6 +57,15 @@ jobs:
           pip install .[dev]  || pip install -r requirements-dev.txt
         fi
 
+    # ---------- 🛠️  Alembic smoke-test ----------
+    - name: Run Alembic migrations
+      run: |
+        alembic upgrade head
+        alembic revision --autogenerate -m "check" && \
+          test -z "$(git status --porcelain | grep migrations)" || \
+          (echo "Missing migration!" && exit 1)
+
+    # ---------- 💅  Lint / style ----------
     - name: Lint & style checks
       run: |
         ruff check .
@@ -45,11 +73,12 @@ jobs:
         black --check .
         mypy .
 
+    # ---------- ✅  Unit tests ----------
     - name: Run tests
       run: |
         pytest -q --exitfirst --maxfail=1
 
-    # Build Docker image so the *Dockerfile* never silently breaks
+    # ---------- 🐳  Docker build ----------
     - name: Docker build (no push)
       run: |
         docker build -t duplicate-image-finder:test .

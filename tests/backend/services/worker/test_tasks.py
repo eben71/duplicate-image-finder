@@ -1,7 +1,6 @@
 from backend.services.worker.tasks import generate_embedding
 from backend.models.embedding import ImageEmbedding
 from backend.models.image import Image
-from sqlmodel import Session
 from datetime import datetime
 
 def test_generate_embedding_creates_vector(session):

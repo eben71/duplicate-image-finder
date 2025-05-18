@@ -1,7 +1,6 @@
 import json
 import logging
 from pathlib import Path
-from typing import List
 from playwright.async_api import BrowserContext
 
 COOKIE_FILE = Path(__file__).parent / "cookies.json"

@@ -1,7 +1,4 @@
 from fastapi import APIRouter, Query
-from celery.result import AsyncResult
-from backend.services.worker.celery_app import celery_app
-from backend.services.ingestion import fake_scrape_images
 from backend.models.enums import IngestionMode
 
 router = APIRouter()

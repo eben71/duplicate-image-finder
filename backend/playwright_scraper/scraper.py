@@ -3,7 +3,6 @@ Implements the core DOM logic for image extraction.
 """
 from typing import List, Dict
 from playwright.async_api import Page
-from .config import config
 import logging
 
 logger = logging.getLogger(__name__)

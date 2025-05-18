@@ -1,1 +1,3 @@
-from .session import engine  # or .session or wherever it's defined
+from .session import engine
+
+__all__ = ['engine']
