@@ -21,7 +21,7 @@ env/
 Thumbs.db
 
 # Alembic
-backend/alembic/versions/
+backend/alembic/versions/*.py
 
 # Pytest
 .pytest_cache/
