@@ -5,7 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from sqlmodel import SQLModel
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 from logging.config import fileConfig
 
 # this is the Alembic Config object, which provides
@@ -47,15 +47,12 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    connectable = create_engine(db_url, pool_pre_ping=True, poolclass=pool.NullPool, future=True)
-
-    with connectable.connect() as connection:
-        context.configure(
-            connection=connection,       
-            target_metadata=target_metadata,
-            compare_type=True,          
-            compare_server_default=True, 
-        )
+    context.configure(
+        url=db_url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+    )
 
     with context.begin_transaction():
         context.run_migrations()
@@ -68,20 +65,23 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    connectable = create_engine(
+        db_url,
         poolclass=pool.NullPool,
+        pool_pre_ping=True,
+        future=True,
     )
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_type=True,           # optional diff helpers
+            compare_server_default=True,
         )
 
         with context.begin_transaction():
             context.run_migrations()
-
 
 if context.is_offline_mode():
     run_migrations_offline()
