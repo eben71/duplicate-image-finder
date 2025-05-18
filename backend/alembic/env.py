@@ -28,6 +28,9 @@ target_metadata = SQLModel.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+db_url = os.getenv("DATABASE_URL", settings.database_url)
+config.set_main_option("sqlalchemy.url", db_url)
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -41,8 +44,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = os.getenv("DATABASE_URL", settings.database_url)
-    engine = create_engine(url, pool_pre_ping=True, future=True)
+    engine = create_engine(db_url, pool_pre_ping=True, future=True)
 
     context.configure(
         url=url,
