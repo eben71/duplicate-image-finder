@@ -39,13 +39,10 @@ jobs:
         fi
 
     - name: Lint & style checks
-+      run: |
-+       # Ruff linter
-+       ruff check .
-+       # Ruff formatter in “check-only” mode (optional but nice)
-+       ruff format --check .
-+       # Black formatter
-+       black --check .
+      run: |
+        ruff check .
+        ruff format --check .
+        black --check .
         mypy .
 
     - name: Run tests
