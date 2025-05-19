@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from pydantic import Field, ValidationError
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, Field, SettingsConfigDict
+from pydantic import ValidationError
 
 
 class Settings(BaseSettings):
