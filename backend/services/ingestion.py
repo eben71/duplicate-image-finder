@@ -5,6 +5,7 @@ from sqlmodel import Session
 from datetime import datetime
 import uuid
 
+
 def fake_scrape_images(user_id: int):
     fake_image_names = [f"photo_{uuid.uuid4().hex[:6]}.jpg" for _ in range(3)]
     created = []
@@ -15,7 +16,7 @@ def fake_scrape_images(user_id: int):
                 user_id=user_id,
                 file_name=name,
                 file_path=f"/fake/path/{name}",
-                uploaded_at=datetime.utcnow()
+                uploaded_at=datetime.utcnow(),
             )
             session.add(img)
             session.commit()

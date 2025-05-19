@@ -1,5 +1,6 @@
-from sqlmodel import SQLModel, Field 
+from sqlmodel import SQLModel, Field
 from datetime import datetime
+
 
 class Image(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)

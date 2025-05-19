@@ -41,3 +41,6 @@ celery:
 test:
 	docker-compose run --rm app pytest tests --cov=backend --disable-warnings
 
+format:
+	ruff format .
+	black .

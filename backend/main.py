@@ -14,7 +14,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 def read_root():
     return {"status": "running", "mode": settings.ingestion_mode}
-

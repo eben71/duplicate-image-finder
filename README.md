@@ -113,7 +113,12 @@ curl http://localhost:8000/health
 - `NameError: Optional not defined`: Ensure `from typing import Optional`
 - `ModuleNotFoundError: No module named 'backend'`: Set `PYTHONPATH=/app`
 - Git ignores empty dirs — add a `.gitkeep` or dummy file to `versions/`
-
+- Trying to install packages but getting environment locked down error:
+    # create environment once
+    python3 -m venv .venv   
+    # activate when needed
+    source .venv/bin/activate
+    # then run install commands
 ---
 
 ## 🧼 Extras

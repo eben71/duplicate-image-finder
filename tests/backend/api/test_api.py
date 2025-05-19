@@ -12,4 +12,3 @@ def test_ingest_with_invalid_user_id(client):
     data = response.json()
     assert "images" in data
     assert len(data["images"]) == 3  # still works since we don’t check user existence
-

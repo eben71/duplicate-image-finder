@@ -1,5 +1,6 @@
 import sys
 import os
+
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from sqlmodel import SQLModel
@@ -32,8 +33,10 @@ db_url = os.getenv("DATABASE_URL")
 if not db_url:
     # Local dev fallback – only executed when the env-var is missing
     from backend.config.settings import settings
+
     db_url = settings.database_url
 config.set_main_option("sqlalchemy.url", db_url)
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -76,12 +79,13 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            compare_type=True,           # optional diff helpers
+            compare_type=True,  # optional diff helpers
             compare_server_default=True,
         )
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

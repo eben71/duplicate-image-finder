@@ -9,6 +9,7 @@ from backend.db.session import get_session
 TEST_DB = "sqlite:///./test.db"
 engine = create_engine(TEST_DB, connect_args={"check_same_thread": False})
 
+
 @pytest.fixture(name="session")
 def session_fixture():
     SQLModel.metadata.create_all(engine)
@@ -18,10 +19,11 @@ def session_fixture():
     if os.path.exists("./test.db"):
         os.remove("./test.db")
 
+
 @pytest.fixture(name="client")
 def client_fixture(session: Session):
     def get_override():
         yield session
+
     app.dependency_overrides[get_session] = get_override
     return TestClient(app)
-    
