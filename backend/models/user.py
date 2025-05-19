@@ -4,7 +4,7 @@ from datetime import datetime
 from backend.models.enums import IngestionMode
 
 
-class User(SQLModel, table=True):
+class User(SQLModel, table=True):   # type: ignore
     id: int = Field(default=None, primary_key=True)
     email: str = Field(index=True, nullable=False, unique=True)
     full_name: str

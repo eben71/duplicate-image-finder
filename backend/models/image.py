@@ -2,7 +2,7 @@ from sqlmodel import SQLModel, Field
 from datetime import datetime
 
 
-class Image(SQLModel, table=True):
+class Image(SQLModel, table=True):  # type: ignore
     id: int = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
     file_name: str

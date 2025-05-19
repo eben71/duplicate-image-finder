@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     )
     ingestion_mode: str = Field("scrape", env="INGESTION_MODE")
     batch_size: int = Field(50, env="BATCH_SIZE")
-    timeout: int = Field(30_000, env="TIMEOUT")         # ms
+    timeout: int = Field(30_000, env="TIMEOUT")  # ms
     scroll_depth: int = Field(5, env="SCROLL_DEPTH")
 
     # Pydantic v2 config

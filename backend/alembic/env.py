@@ -8,7 +8,7 @@ from sqlmodel import SQLModel
 from alembic import context
 from sqlalchemy import create_engine, pool
 from logging.config import fileConfig
-from typing import cast 
+from typing import cast
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -33,10 +33,12 @@ target_metadata = SQLModel.metadata
 _db_url_env = os.getenv("DATABASE_URL")
 if _db_url_env is None:
     from backend.config.settings import settings
+
     _db_url_env = settings.database_url
 
-db_url: str = cast(str, _db_url_env) 
+db_url: str = cast(str, _db_url_env)
 config.set_main_option("sqlalchemy.url", db_url)
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
