@@ -6,6 +6,7 @@ celery[redis]
 alembic
 python-dotenv
 sqlmodel
+pydantic
 pydantic-settings
 numpy
 Pillow
@@ -16,6 +17,4 @@ pytest-asyncio
 pytest-cov
 pytest
 httpx
-
-
-
+mypy

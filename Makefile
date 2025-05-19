@@ -44,3 +44,9 @@ test:
 format:
 	ruff format .
 	black .
+	
+ci:
+	ruff check .
+	ruff format --check .
+	black --check .
+	mypy .

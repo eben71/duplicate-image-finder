@@ -31,6 +31,15 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+      CELERY_BROKER_URL: redis://localhost:6379/0
+      CELERY_BACKEND_URL: redis://localhost:6379/1
+      GOOGLE_PHOTOS_URL: https://photos.google.com/
+      FASTAPI_ENDPOINT: http://localhost:8000/api/v1/images/scraped
+      BATCH_SIZE: 50
+      TIMEOUT: 30000
+      SCROLL_DEPTH: 5
+      SESSION_COOKIE_PATH: ~/.gp_session.json
+      INGESTION_MODE: scrape
 
     # ---- 1. Define a build matrix if you want to test multiple interpreters ----
     strategy:
@@ -81,4 +90,4 @@ jobs:
     # ---------- 🐳  Docker build ----------
     - name: Docker build (no push)
       run: |
-        docker build -t duplicate-image-finder:test .
+        docker build -no-cache -t duplicate-image-finder:test .
