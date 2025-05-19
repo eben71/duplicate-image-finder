@@ -29,6 +29,16 @@ jobs:
           --health-timeout=5s
           --health-retries=5
 
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     env:
       DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
       CELERY_BROKER_URL: redis://localhost:6379/0
@@ -55,6 +65,10 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         cache: "pip"  
+
+    - name: Clear pip cache
+      run: |
+        rm -rf ~/.cache/pip
 
     - name: Install dependencies
       run: |

@@ -18,3 +18,4 @@ pytest-cov
 pytest
 httpx
 mypy
+mypy_extensions
