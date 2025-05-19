@@ -6,8 +6,8 @@ celery[redis]
 alembic
 python-dotenv
 sqlmodel
-pydantic==2.11.0
-pydantic-settings==2.2.1
+pydantic
+pydantic
 numpy
 Pillow
 playwright
@@ -17,5 +17,5 @@ pytest-asyncio
 pytest-cov
 pytest
 httpx
-mypy==1.15.0
-mypy_extensions==1.1.0
+mypy
+mypy_extensions

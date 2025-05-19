@@ -11,11 +11,11 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # ───────────────────────── Required (no defaults) ──────────────────────────
-    database_url: str = Field(..., env="DATABASE_URL")
-    celery_broker_url: str = Field(..., env="CELERY_BROKER_URL")
-    celery_backend_url: str = Field(..., env="CELERY_BACKEND_URL")
-    google_photos_url: str = Field(..., env="GOOGLE_PHOTOS_URL")
-    fastapi_endpoint: str = Field(..., env="FASTAPI_ENDPOINT")
+    database_url: str = Field(env="DATABASE_URL")
+    celery_broker_url: str = Field(env="CELERY_BROKER_URL")
+    celery_backend_url: str = Field(env="CELERY_BACKEND_URL")
+    google_photos_url: str = Field(env="GOOGLE_PHOTOS_URL")
+    fastapi_endpoint: str = Field(env="FASTAPI_ENDPOINT")
 
     # ───────────────────────── Optional / defaults ─────────────────────────────
     session_cookie_path: Optional[Path] = Field(
