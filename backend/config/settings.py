@@ -6,16 +6,16 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic_settings import BaseSettings
-from pydantic import ValidationError, Field
+from pydantic import ValidationAlias, ValidationError, Field
 
 
 class Settings(BaseSettings):
     # ───────────────────────── Required (no defaults) ──────────────────────────
-    database_url: str = Field(..., env="DATABASE_URL")  # type: ignore[arg-type]
-    celery_broker_url: str = Field(..., env="CELERY_BROKER_URL")  # type: ignore[arg-type]
-    celery_backend_url: str = Field(..., env="CELERY_BACKEND_URL")  # type: ignore[arg-type]
-    google_photos_url: str = Field(..., env="GOOGLE_PHOTOS_URL")  # type: ignore[arg-type]
-    fastapi_endpoint: str = Field(..., env="FASTAPI_ENDPOINT")  # type: ignore[arg-type]
+    database_url: str = Field(..., validation_alias=ValidationAlias("DATABASE_URL"))
+    celery_broker_url: str = Field(..., validation_alias=ValidationAlias("CELERY_BROKER_URL"))
+    celery_backend_url: str = Field(..., validation_alias=ValidationAlias("CELERY_BACKEND_URL"))
+    google_photos_url: str = Field(..., validation_alias=ValidationAlias("GOOGLE_PHOTOS_URL"))
+    fastapi_endpoint: str = Field(..., validation_alias=ValidationAlias("FASTAPI_ENDPOINT"))
 
     # ───────────────────────── Optional / defaults ─────────────────────────────
     session_cookie_path: Optional[Path] = Field(
