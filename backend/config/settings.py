@@ -5,17 +5,17 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from pydantic_settings import BaseSettings, Field
-from pydantic import ValidationError
+from pydantic_settings import BaseSettings
+from pydantic import ValidationError, Field
 
 
 class Settings(BaseSettings):
     # ───────────────────────── Required (no defaults) ──────────────────────────
-    database_url: str = Field(..., env="DATABASE_URL")
-    celery_broker_url: str = Field(..., env="CELERY_BROKER_URL")
-    celery_backend_url: str = Field(..., env="CELERY_BACKEND_URL")
-    google_photos_url: str = Field(..., env="GOOGLE_PHOTOS_URL")
-    fastapi_endpoint: str = Field(..., env="FASTAPI_ENDPOINT")
+    database_url: str = Field(..., env="DATABASE_URL")  # type: ignore[arg-type]
+    celery_broker_url: str = Field(..., env="CELERY_BROKER_URL")  # type: ignore[arg-type]
+    celery_backend_url: str = Field(..., env="CELERY_BACKEND_URL")  # type: ignore[arg-type]
+    google_photos_url: str = Field(..., env="GOOGLE_PHOTOS_URL")  # type: ignore[arg-type]
+    fastapi_endpoint: str = Field(..., env="FASTAPI_ENDPOINT")  # type: ignore[arg-type]
 
     # ───────────────────────── Optional / defaults ─────────────────────────────
     session_cookie_path: Optional[Path] = Field(
