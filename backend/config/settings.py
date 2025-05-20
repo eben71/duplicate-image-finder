@@ -12,10 +12,18 @@ from pydantic import ValidationAlias, ValidationError, Field
 class Settings(BaseSettings):
     # ───────────────────────── Required (no defaults) ──────────────────────────
     database_url: str = Field(..., validation_alias=ValidationAlias("DATABASE_URL"))
-    celery_broker_url: str = Field(..., validation_alias=ValidationAlias("CELERY_BROKER_URL"))
-    celery_backend_url: str = Field(..., validation_alias=ValidationAlias("CELERY_BACKEND_URL"))
-    google_photos_url: str = Field(..., validation_alias=ValidationAlias("GOOGLE_PHOTOS_URL"))
-    fastapi_endpoint: str = Field(..., validation_alias=ValidationAlias("FASTAPI_ENDPOINT"))
+    celery_broker_url: str = Field(
+        ..., validation_alias=ValidationAlias("CELERY_BROKER_URL")
+    )
+    celery_backend_url: str = Field(
+        ..., validation_alias=ValidationAlias("CELERY_BACKEND_URL")
+    )
+    google_photos_url: str = Field(
+        ..., validation_alias=ValidationAlias("GOOGLE_PHOTOS_URL")
+    )
+    fastapi_endpoint: str = Field(
+        ..., validation_alias=ValidationAlias("FASTAPI_ENDPOINT")
+    )
 
     # ───────────────────────── Optional / defaults ─────────────────────────────
     session_cookie_path: Optional[Path] = Field(
