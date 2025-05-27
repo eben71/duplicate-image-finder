@@ -1,4 +1,4 @@
-#!/Users/ebenventer/Documents/Projects/duplicate-image-finder/.venv/bin/python3.12
+#!/Users/ebenventer/Documents/Projects/duplicate-image-finder/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

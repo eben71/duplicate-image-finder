@@ -80,6 +80,9 @@ jobs:
           pip install .[dev]  || pip install -r requirements-dev.txt
         fi
 
+    - name: List package versions
+      run: pip list
+
     # ---------- 🛠️  Alembic smoke-test ----------
     - name: Run Alembic migrations 
       run: |
