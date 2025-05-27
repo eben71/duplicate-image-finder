@@ -4,11 +4,13 @@ on:
   push:
     branches: 
     - main 
-    - dependencies
+    - dependencies-prod  # For Dependabot production dependency PRs
+    - dependencies-dev
   pull_request:
     branches:  
     - main 
-    - dependencies
+    - dependencies-prod  # For Dependabot production dependency PRs
+    - dependencies-dev
 
 jobs:
   build-test-lint:
