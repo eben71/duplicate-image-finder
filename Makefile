@@ -111,4 +111,4 @@ ci:
 	. .venv/bin/activate && ruff check .
 	. .venv/bin/activate && ruff format --check .
 	. .venv/bin/activate && black --check .
-	. v.env/bin/activate && mypy .
+	. .venv/bin/activate && mypy .
