@@ -18,6 +18,10 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]  # Ignore major version updates
+    commit-message:
+      prefix: "deps(prod)"
+      include: "scope"
+    description: "Updates for production dependencies in requirements.txt"
 
   # Monitor development dependencies (requirements-dev.txt)
   - package-ecosystem: "pip"
@@ -37,3 +41,7 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]  # Ignore major version updates
+    commit-message:
+      prefix: "deps(dev)"
+      include: "scope"
+    description: "Updates for development dependencies in requirements-dev.txt"
