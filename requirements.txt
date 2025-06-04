@@ -6,7 +6,7 @@ opencv-python==4.10.0.84
 pillow==11.0.0
 playwright==1.47.0
 psycopg2-binary==2.9.9
-pydantic==2.9.2
+pydantic==2.11.5
 pydantic_core==2.23.4
 pydantic-settings==2.5.2
 python-dotenv==1.1.0
