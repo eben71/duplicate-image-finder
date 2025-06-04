@@ -8,7 +8,7 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Australia/Perth"
-    target-branch: "dependencies-prod"
+    target-branch: "main"
     open-pull-requests-limit: 5
     reviewers:
       - "eben71"  # Your GitHub username
@@ -30,7 +30,7 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Australia/Perth"
-    target-branch: "dependencies-dev"
+    target-branch: "main"
     open-pull-requests-limit: 5
     reviewers:
       - "eben71"  # Your GitHub username
