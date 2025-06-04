@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # Monitor production dependencies (requirements.txt)
+  # Monitor all dependencies (requirements.txt and requirements-dev.txt)
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
@@ -11,35 +11,15 @@ updates:
     target-branch: "main"
     open-pull-requests-limit: 5
     reviewers:
-      - "eben71"  # Your GitHub username
+      - "eben71"
     labels:
       - "dependencies"
       - "python"
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]  # Ignore major version updates
-    commit-message:
-      prefix: "deps(prod)"
-      include: "scope"
-
-  # Monitor development dependencies (requirements-dev.txt)
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "Australia/Perth"
-    target-branch: "main"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "eben71"  # Your GitHub username
-    labels:
-      - "dependencies"
       - "dev-tools"
     ignore:
       - dependency-name: "*"
-        update-types: ["version-update:semver-major"]  # Ignore major version updates
+        update-types: ["version-update:semver-major"]
     commit-message:
-      prefix: "deps(dev)"
+      prefix: "deps"
       include: "scope"
+    description: "Updates for all dependencies (production and development)"
