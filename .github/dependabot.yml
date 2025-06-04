@@ -22,4 +22,3 @@ updates:
     commit-message:
       prefix: "deps"
       include: "scope"
-    description: "Updates for all dependencies (production and development)"
