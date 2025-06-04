@@ -3,8 +3,14 @@
 # - Local tasks (linting, formatting) require a virtual environment (`source .venv/bin/activate`).
 # - Run `make <task>` to execute.
 # - SDLC phases: Development (coding, prototyping), Testing (unit/integration tests), Deployment (CI/CD, production), Maintenance (updates, debugging).
+# Variables
+VENV_DIR = .venv
+PYTHON_VERSION_CHECK = python3.12 --version
+PIP = $(VENV_DIR)/bin/pip
+PYTHON = $(VENV_DIR)/bin/python3.12
+BREW = brew  
 
-.PHONY: build up down restart logs health shell test reset-db init-db alembic migrate celery install-deps install-dev-deps check-versions format ci
+.PHONY: build up down restart logs health shell test reset-db init-db alembic migrate celery install-deps install-dev-deps check-versions format ci update-python
 
 # --- Docker: App Lifecycle ---
 # Build Docker images
@@ -78,23 +84,24 @@ test:
 	docker-compose run --rm app pytest tests --cov=backend --disable-warnings
 
 # --- Local: Dependency Management (requires virtual environment) ---
+# Local tasks (linting, formatting) require a virtual environment (`source .venv/bin/activate`).
 # Install production dependencies locally (in virtual environment)
 # SDLC: Development (setup local env), Testing (local testing outside Docker)
 install-deps:
-	python -m venv .venv
-	. .venv/bin/activate && pip install -r requirements.txt
+	python3.12 -m venv $(VENV_DIR)
+	. $(VENV_DIR)/bin/activate && $(PIP) install -r requirements.txt
 
 # Install development dependencies locally (in virtual environment)
 # SDLC: Development (setup linting/formatting tools), Testing (pre-CI checks)
 install-dev-deps:
-	python -m venv .venv
-	. .venv/bin/activate && pip install -r requirements-dev.txt
+	python3.12 -m venv $(VENV_DIR)
+	. $(VENV_DIR)/bin/activate && $(PIP) install -r requirements-dev.txt
 
 # Check package versions in local virtual environment and Docker
 # SDLC: Development (debug version mismatches), Testing (ensure consistency), Maintenance (verify environments)
 check-versions:
 	@echo "Local versions (virtual environment):"
-	@. .venv/bin/activate && pip list
+	@. $(VENV_DIR)/bin/activate && $(PIP) list
 	@echo "\nDocker versions (app container):"
 	@docker-compose exec app pip list
 
@@ -102,13 +109,23 @@ check-versions:
 # Format code with ruff and black
 # SDLC: Development (before committing code), Testing (pre-CI formatting)
 format:
-	. .venv/bin/activate && ruff format .
-	. .venv/bin/activate && black .
+	. $(VENV_DIR)/bin/activate && ruff format .
+	. $(VENV_DIR)/bin/activate && black .
 
 # Run linting and type checking (CI simulation)
 # SDLC: Development (code quality checks), Testing (pre-CI validation), Deployment (CI pipeline)
 ci:
-	. .venv/bin/activate && ruff check .
-	. .venv/bin/activate && ruff format --check .
-	. .venv/bin/activate && black --check .
-	. .venv/bin/activate && mypy .
+	. $(VENV_DIR)/bin/activate && ruff check .
+	. $(VENV_DIR)/bin/activate && ruff format --check .
+	. $(VENV_DIR)/bin/activate && black --check .
+	. $(VENV_DIR)/bin/activate && mypy .
+
+# Update Python to 3.12
+update-python:
+	@echo "Updating Homebrew and Python to 3.12..."
+	@$(BREW) update
+	@$(BREW) install python@3.12 || $(BREW) upgrade python@3.12
+	@echo "Removing old virtual environment (if exists)..."
+	@rm -rf $(VENV_DIR)
+	@echo "Creating new virtual environment..."
+	@python3.12 -m venv $(VENV_DIR)

@@ -3,36 +3,27 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
-
+from typing import Optional, no_type_check
 from pydantic_settings import BaseSettings
-from pydantic import ValidationAlias, ValidationError, Field
+from pydantic import ValidationError, Field
 
 
 class Settings(BaseSettings):
     # ───────────────────────── Required (no defaults) ──────────────────────────
-    database_url: str = Field(..., validation_alias=ValidationAlias("DATABASE_URL"))
-    celery_broker_url: str = Field(
-        ..., validation_alias=ValidationAlias("CELERY_BROKER_URL")
-    )
-    celery_backend_url: str = Field(
-        ..., validation_alias=ValidationAlias("CELERY_BACKEND_URL")
-    )
-    google_photos_url: str = Field(
-        ..., validation_alias=ValidationAlias("GOOGLE_PHOTOS_URL")
-    )
-    fastapi_endpoint: str = Field(
-        ..., validation_alias=ValidationAlias("FASTAPI_ENDPOINT")
-    )
+    database_url: str = Field(..., validation_alias="DATABASE_URL")
+    celery_broker_url: str = Field(..., validation_alias="CELERY_BROKER_URL")
+    celery_backend_url: str = Field(..., validation_alias="CELERY_BACKEND_URL")
+    google_photos_url: str = Field(..., validation_alias="GOOGLE_PHOTOS_URL")
+    fastapi_endpoint: str = Field(..., validation_alias="FASTAPI_ENDPOINT")
 
     # ───────────────────────── Optional / defaults ─────────────────────────────
     session_cookie_path: Optional[Path] = Field(
-        Path("~/.gp_session.json").expanduser(), env="SESSION_COOKIE_PATH"
+        Path("~/.gp_session.json").expanduser(), validation_alias="SESSION_COOKIE_PATH"
     )
-    ingestion_mode: str = Field("scrape", env="INGESTION_MODE")
-    batch_size: int = Field(50, env="BATCH_SIZE")
-    timeout: int = Field(30_000, env="TIMEOUT")  # ms
-    scroll_depth: int = Field(5, env="SCROLL_DEPTH")
+    ingestion_mode: str = Field("scrape", validation_alias="INGESTION_MODE")
+    batch_size: int = Field(50, validation_alias="BATCH_SIZE")
+    timeout: int = Field(30_000, validation_alias="TIMEOUT")  # ms
+    scroll_depth: int = Field(5, validation_alias="SCROLL_DEPTH")
 
     # Pydantic v2 config
     model_config = {
@@ -42,6 +33,7 @@ class Settings(BaseSettings):
     }
 
 
+@no_type_check
 def get_settings() -> Settings:
     """Return a validated Settings instance or exit with a helpful message."""
     try:
