@@ -16,17 +16,17 @@ BREW = brew
 # Build Docker images
 # SDLC: Development (initial setup), Testing (before tests), Deployment (CI/CD pipeline)
 build:
-	docker-compose build
+	docker compose build
 
 # Start containers (builds images first)
 # SDLC: Development (run app locally), Testing (test environment), Deployment (local staging)
 up:
-	docker-compose up --build -d
+	docker compose up --build -d
 
 # Stop and remove containers and volumes
 # SDLC: Development (cleanup), Testing (reset environment), Maintenance (stop services)
 down:
-	docker-compose down -v
+	docker compose up --build -dcompose down -v
 
 # Restart containers (stop, then start)
 # SDLC: Development (apply changes), Testing (reset for tests), Maintenance (restart services)
@@ -35,7 +35,7 @@ restart: down up
 # View container logs
 # SDLC: Development (debugging), Testing (check test failures), Maintenance (monitor issues)
 logs:
-	docker-compose logs -f
+	docker compose logs -f
 
 # Check app health (requires app running at localhost:8000)
 # SDLC: Testing (verify app), Deployment (post-deployment check), Maintenance (monitor health)
@@ -46,43 +46,43 @@ health:
 # Reset database: Stop containers, remove migrations, recreate tables
 # SDLC: Development (reset DB for new schema), Testing (clean DB for tests)
 reset-db:
-	docker-compose down -v
+	docker compose down -v
 	rm -f backend/alembic/versions/*.py
-	docker-compose up -d postgres
-	docker-compose exec -T postgres psql -U postgres -d postgres -c "CREATE DATABASE app;"
-	docker-compose exec app python -c "from sqlmodel import SQLModel; from backend.db import engine; SQLModel.metadata.create_all(engine)"
+	docker compose up -d postgres
+	docker compose exec -T postgres psql -U postgres -d postgres -c "CREATE DATABASE app;"
+	docker compose exec app python -c "from sqlmodel import SQLModel; from backend.db import engine; SQLModel.metadata.create_all(engine)"
 
 # Initialize database (run migrations)
 # SDLC: Development (apply initial schema), Deployment (setup production DB)
 init-db:
-	docker-compose exec app alembic -c /app/backend/alembic.ini upgrade head
+	docker compose exec app alembic -c /app/backend/alembic.ini upgrade head
 
 # Generate new Alembic migration (usage: make alembic m="migration_name")
 # SDLC: Development (after schema changes)
 alembic:
-	docker-compose exec app alembic -c /app/backend/alembic.ini revision --autogenerate -m "$(m)"
+	docker compose exec app alembic -c /app/backend/alembic.ini revision --autogenerate -m "$(m)"
 
 # Apply migrations
 # SDLC: Development (apply schema updates), Deployment (update production DB)
 migrate:
-	docker-compose exec app alembic -c /app/backend/alembic.ini upgrade head
+	docker compose exec app alembic -c /app/backend/alembic.ini upgrade head
 
 # --- Docker: Development ---
 # Open a shell in the app container
 # SDLC: Development (debugging, manual checks), Maintenance (troubleshooting)
 shell:
-	docker-compose exec app bash
+	docker compose exec app bash
 
 # Run Celery worker
 # SDLC: Development (test background tasks), Testing (task integration), Deployment (run workers)
 celery:
-	docker-compose exec worker celery -A backend.services.worker.celery_app worker --loglevel=info
-
+	docker compose exec worker celery -A backend.services.worker.celery_app worker --loglevel=info
+	
 # Run tests in container with coverage
 # SDLC: Development (verify code), Testing (unit/integration tests), Deployment (CI pipeline)
 test:
-	docker-compose run --rm app pytest tests --cov=backend --disable-warnings
-
+	docker compose run --rm app pytest tests --cov=backend --disable-warnings
+	
 # --- Local: Dependency Management (requires virtual environment) ---
 # Local tasks (linting, formatting) require a virtual environment (`source .venv/bin/activate`).
 # Install production dependencies locally (in virtual environment)
