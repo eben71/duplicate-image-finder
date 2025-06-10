@@ -1,0 +1,19 @@
+name: Cleanup Workflow Runs
+
+on:
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install GitHub CLI
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gh
+        gh --version
+    - name: Delete Workflow Runs
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh run list -b main --json databaseId -q '.[].databaseId' | xargs -I {} gh api -X DELETE "repos/${{ github.repository }}/actions/runs/{}"
