@@ -1,0 +1,74 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: duplicatefinder
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_URL=postgresql+psycopg2://postgres:mysecretpassword@db:5432/duplicatefinder
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_BACKEND_URL=redis://redis:6379/1
+
+    depends_on:
+      - db
+
+  redis:
+    image: redis:7
+    restart: always
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A backend.services.worker.celery_app worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - app
+      - redis
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:mysecretpassword@db:5432/duplicatefinder
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_BACKEND_URL=redis://redis:6379/1
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    command: >
+      uvicorn frontend.main:app --host 0.0.0.0 --port 3000 --reload
+    volumes:
+      - .:/app
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:

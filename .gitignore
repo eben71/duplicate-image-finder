@@ -1,0 +1,34 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+*.log
+
+# Environment
+.venv/
+venv/
+env/
+
+# Editor & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+repomix-output.xml
+
+# Alembic
+backend/alembic/versions/*.py
+
+# Pytest
+.pytest_cache/
+coverage/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local DB data
+postgres_data/

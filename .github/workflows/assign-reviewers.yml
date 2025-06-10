@@ -1,0 +1,19 @@
+name: Assign Reviewers to Dependabot PRs
+on:
+  pull_request:
+    types: [opened, labeled]
+jobs:
+  assign-reviewers:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Assign reviewers
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              reviewers: ['eben71']
+            });
