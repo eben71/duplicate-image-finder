@@ -1,4 +1,3 @@
-import pytest
 from backend.models.user import User, IngestionMode
 from backend.services.ingestion import fake_scrape_images
 from unittest.mock import patch

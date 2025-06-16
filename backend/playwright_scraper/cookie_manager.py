@@ -5,6 +5,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+
 async def load_cookies(context, path: str) -> bool:
     path_obj = Path(path).expanduser()
     if not path_obj.exists():

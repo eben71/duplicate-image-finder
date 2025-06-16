@@ -6,6 +6,7 @@ from backend.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
+
 async def scrape_google_photos():
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=settings.HEADLESS_MODE)
