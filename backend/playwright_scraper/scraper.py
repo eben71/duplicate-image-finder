@@ -1,26 +1,34 @@
 import logging
-from playwright.async_api import async_playwright
-from cookie_manager import load_cookies, save_cookies
+from playwright.async_api import async_playwright, TimeoutError
+from backend.playwright_scraper.cookie_manager import load_cookies, save_cookies
 from backend.config.settings import settings
 
 
 logger = logging.getLogger(__name__)
-
 
 async def scrape_google_photos():
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=settings.HEADLESS_MODE)
         context = await browser.new_context()
 
-        cookies_loaded = await load_cookies(context, settings.COOKIE_FILE)
+        session_valid = False
+
+        await load_cookies(context, settings.SESSION_COOKIE_PATH)
         page = await context.new_page()
         await page.goto(settings.GOOGLE_PHOTOS_URL, wait_until="load")
 
-        if not cookies_loaded:
-            logger.warning("No cookies loaded. Prompting for manual login...")
-            print("🔑 Please login in the browser window. Press ENTER once complete.")
-            input()
-            await save_cookies(context, settings.COOKIE_FILE)
+        try:
+            await page.wait_for_selector('[aria-label="Account"]', timeout=5000)
+            session_valid = True
+            logger.info("✅ Session is valid – user is logged in.")
 
-        logger.info("Browser is ready and session is active.")
-        # Future: Add scrolling and image extraction logic here.
+        except TimeoutError:
+            logger.warning("❌ Session invalid or expired – manual login required.")
+
+        if not session_valid:
+            print("🔑 Please complete login in the browser window, then press ENTER...")
+            input()
+            await save_cookies(context, settings.SESSION_COOKIE_PATH)
+            logger.info("✅ New cookies saved after manual login.")
+
+        logger.info("🔍 Ready to begin image scraping...")
