@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sys
+import logging
 from pathlib import Path
 from typing import Optional, no_type_check
 from pydantic_settings import BaseSettings
@@ -10,20 +11,23 @@ from pydantic import ValidationError, Field
 
 class Settings(BaseSettings):
     # ───────────────────────── Required (no defaults) ──────────────────────────
-    database_url: str = Field(..., validation_alias="DATABASE_URL")
-    celery_broker_url: str = Field(..., validation_alias="CELERY_BROKER_URL")
-    celery_backend_url: str = Field(..., validation_alias="CELERY_BACKEND_URL")
-    google_photos_url: str = Field(..., validation_alias="GOOGLE_PHOTOS_URL")
-    fastapi_endpoint: str = Field(..., validation_alias="FASTAPI_ENDPOINT")
+    DATABASE_URL: str = Field(..., validation_alias="DATABASE_URL")
+    CELERY_BROKER_URL: str = Field(..., validation_alias="CELERY_BROKER_URL")
+    CELERY_BACKEND_URL: str = Field(..., validation_alias="CELERY_BACKEND_URL")
+    GOOGLE_PHOTOS_URL: str = Field(..., validation_alias="GOOGLE_PHOTOS_URL")
+    FASTAPI_ENDPOINT: str = Field(..., validation_alias="FASTAPI_ENDPOINT")
 
     # ───────────────────────── Optional / defaults ─────────────────────────────
-    session_cookie_path: Optional[Path] = Field(
+    SESSION_COOKIE_PATH: Optional[Path] = Field(
         Path("~/.gp_session.json").expanduser(), validation_alias="SESSION_COOKIE_PATH"
     )
-    ingestion_mode: str = Field("scrape", validation_alias="INGESTION_MODE")
-    batch_size: int = Field(50, validation_alias="BATCH_SIZE")
-    timeout: int = Field(30_000, validation_alias="TIMEOUT")  # ms
-    scroll_depth: int = Field(5, validation_alias="SCROLL_DEPTH")
+    INGESTION_MODE: str = Field("scrape", validation_alias="INGESTION_MODE")
+    BATCH_SIZE: int = Field(50, validation_alias="BATCH_SIZE")
+    TIMEOUT: int = Field(30_000, validation_alias="TIMEOUT")  # ms
+    SCROLL_DEPTH: int = Field(5, validation_alias="SCROLL_DEPTH")
+    SCROLL_LIMIT: int = Field(100, validation_alias="SCROLL_LIMIT")
+    HEADLESS_MODE: bool = Field(True, validation_alias="HEADLESS")
+    LOG_LEVEL: int = logging.DEBUG
 
     # Pydantic v2 config
     model_config = {
@@ -36,7 +40,7 @@ class Settings(BaseSettings):
         """
         Retrieve an environment variable or raise an error if it's missing.
         """
-        value = self.__getattribute__(var_name.lower())
+        value = self.__getattribute__(var_name.upper())
         if value is None or (isinstance(value, str) and value.strip() == ""):
             raise ValueError(f"{var_name} environment variable is required")
         return value

@@ -1,34 +1,37 @@
 import json
 import logging
 from pathlib import Path
-from playwright.async_api import BrowserContext
 
-COOKIE_FILE = Path(__file__).parent / "cookies.json"
+
 logger = logging.getLogger(__name__)
 
 
-async def load_cookies(context: BrowserContext) -> None:
-    """
-    Load cookies from disk into Playwright context.
-    """
-    if COOKIE_FILE.exists():
-        try:
-            cookies = json.loads(COOKIE_FILE.read_text())
-            await context.add_cookies(cookies)
-            logger.info(f"Loaded {len(cookies)} cookies from {COOKIE_FILE}")
-        except Exception as e:
-            logger.error(f"Failed to load cookies: {e}")
-    else:
-        logger.info(f"No cookie file at {COOKIE_FILE}, login required.")
+async def load_cookies(context, path: str) -> bool:
+    path_obj = Path(path).expanduser()
+    if not path_obj.exists():
+        logger.info(f"No cookie file found at {path_obj}")
+        return False
+
+    try:
+        with path_obj.open("r") as f:
+            cookies = json.load(f)
+
+        await context.add_cookies(cookies)
+        logger.info(f"Loaded cookies from {path_obj}")
+        return True
+
+    except Exception as ex:
+        logger.error(f"Failed to load cookies: {ex}", exc_info=True)
+        return False
 
 
-async def save_cookies(context: BrowserContext) -> None:
-    """
-    Persist current context cookies to disk.
-    """
+async def save_cookies(context, path: str):
+    path_obj = Path(path).expanduser()
     try:
         cookies = await context.cookies()
-        COOKIE_FILE.write_text(json.dumps(cookies, indent=2))
-        logger.info(f"Saved {len(cookies)} cookies to {COOKIE_FILE}")
-    except Exception as e:
-        logger.error(f"Failed to save cookies: {e}")
+        with path_obj.open("w") as f:
+            json.dump(cookies, f, indent=2)
+        logger.info(f"Saved cookies to {path_obj}")
+
+    except Exception as ex:
+        logger.error(f"Failed to save cookies: {ex}", exc_info=True)

@@ -16,7 +16,7 @@ def send_to_api(data: List[Dict]) -> None:
     """
     try:
         response = httpx.post(
-            settings.fastapi_endpoint, json=data, timeout=settings.timeout / 1000
+            settings.FASTAPI_ENDPOINT, json=data, timeout=settings.TIMEOUT / 1000
         )
         response.raise_for_status()
         logger.info(f"Sent {len(data)} records successfully")

@@ -3,8 +3,8 @@ from celery import Celery
 
 celery_app = Celery(
     "duplicate_finder",
-    broker=settings.celery_broker_url,
-    backend=settings.celery_backend_url,
+    broker=settings.CELERY_BROKER_URL,
+    backend=settings.CELERY_BACKEND_URL,
 )
 
 celery_app.conf.task_routes = {
