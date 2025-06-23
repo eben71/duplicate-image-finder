@@ -16,7 +16,7 @@ scikit-image==0.24.0
 SQLAlchemy==2.0.41
 sqlmodel==0.0.24
 uvicorn==0.34.3
-pytest==8.4.0
+pytest==8.4.1
 pytest-asyncio==0.26.0
 pytest-cov==5.0.0
 pytest-mock
