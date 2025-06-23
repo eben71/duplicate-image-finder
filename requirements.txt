@@ -1,6 +1,6 @@
 alembic==1.16.1
 celery==5.5.3
-fastapi==0.115.12
+fastapi==0.115.13
 httpx
 numpy==2.1.2
 opencv-python==4.11.0.86
