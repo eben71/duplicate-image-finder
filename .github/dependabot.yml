@@ -8,6 +8,10 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Australia/Perth"
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"  # Matches all dependencies in the npm ecosystem
     target-branch: "main"
     open-pull-requests-limit: 5
     labels:
