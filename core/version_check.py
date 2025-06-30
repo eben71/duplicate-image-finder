@@ -14,11 +14,15 @@ def check_playwright_version():
     try:
         pip_version = version("playwright")
     except PackageNotFoundError:
-        logger.warning("Playwright (Python package) not installed – skipping version check")
+        logger.warning(
+            "Playwright (Python package) not installed – skipping version check"
+        )
         return
 
     cli_output = subprocess.getoutput("playwright --version")
-    cli_version = cli_output.strip().split()[-1] if "Version" in cli_output else "unknown"
+    cli_version = (
+        cli_output.strip().split()[-1] if "Version" in cli_output else "unknown"
+    )
 
     if pip_version != cli_version:
         raise RuntimeError(
