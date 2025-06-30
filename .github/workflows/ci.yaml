@@ -93,7 +93,7 @@ jobs:
     - name: Docker build
       run: make build
 
-    - name: ✅ Verify Playwright version match
+    - name: Verify Playwright version match
       run: |
         python -c "from core.version_check import check_playwright_version; check_playwright_version()"
 

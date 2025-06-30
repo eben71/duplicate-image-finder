@@ -1,6 +1,7 @@
 import logging
 from playwright.async_api import async_playwright, TimeoutError
 from backend.playwright_scraper.cookie_manager import load_cookies, save_cookies
+from backend.playwright_scraper.image_scraper import extract_images
 from backend.config.settings import settings
 
 
@@ -18,18 +19,26 @@ async def scrape_google_photos():
         page = await context.new_page()
         await page.goto(settings.GOOGLE_PHOTOS_URL, wait_until="load")
 
-        try:
-            await page.wait_for_selector('[aria-label="Account"]', timeout=5000)
-            session_valid = True
-            logger.info("✅ Session is valid – user is logged in.")
-
-        except TimeoutError:
-            logger.warning("❌ Session invalid or expired – manual login required.")
+        session_valid = await is_session_valid(page)
 
         if not session_valid:
+            logger.warning("❌ Session invalid or expired – manual login required.")
             print("🔑 Please complete login in the browser window, then press ENTER...")
             input()
-            await save_cookies(context, settings.SESSION_COOKIE_PATH)
-            logger.info("✅ New cookies saved after manual login.")
 
-        logger.info("🔍 Ready to begin image scraping...")
+            await save_cookies(context, settings.SESSION_COOKIE_PATH)
+            session_valid = await is_session_valid(page)
+
+            if not session_valid:
+                logger.error("❌ Login still invalid after manual attempt – aborting.")
+                return
+
+            logger.info("✅ Session is valid – continuing to scrape...")
+            images = await extract_images(page, scroll_limit=5)
+
+async def is_session_valid(page) -> bool:
+    try:
+        await page.wait_for_selector('[aria-label="Account"]', timeout=5000)
+        return True
+    except:
+        return False
