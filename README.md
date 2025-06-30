@@ -2,6 +2,8 @@
 
 # Duplicate Image Finder Backend (FastAPI + Celery + Redis + Postgres)
 
+![Playwright Version](https://img.shields.io/badge/Playwright-v1.53.1-blue?logo=playwright)
+
 This is a boilerplate backend stack for building a scalable image processing application that identifies duplicate images. It includes a FastAPI backend, a basic FastAPI-based frontend, and a Playwright-based web scraper for image ingestion. The project is designed for development, testing, and deployment with Docker, CI/CD integration, and a robust testing suite.
 
 ## 🔧 Tech Stack

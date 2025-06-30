@@ -2,11 +2,6 @@ import subprocess
 import logging
 from importlib.metadata import version, PackageNotFoundError
 
-try:
-    import playwright
-except ImportError:
-    playwright = None
-
 logger = logging.getLogger(__name__)
 
 
@@ -19,10 +14,14 @@ def check_playwright_version():
         )
         return
 
-    cli_output = subprocess.getoutput("playwright --version")
-    cli_version = (
-        cli_output.strip().split()[-1] if "Version" in cli_output else "unknown"
-    )
+    try:
+        cli_output = subprocess.getoutput("playwright --version")
+        cli_version = (
+            cli_output.strip().split()[-1] if "Version" in cli_output else "unknown"
+        )
+    except Exception as ex:
+        logger.warning(f"Failed to run playwright CLI: {ex}")
+        cli_version = "unknown"
 
     if pip_version != cli_version:
         raise RuntimeError(
