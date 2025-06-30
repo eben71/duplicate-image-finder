@@ -5,9 +5,9 @@
 # - SDLC phases: Development (coding, prototyping), Testing (unit/integration tests), Deployment (CI/CD, production), Maintenance (updates, debugging).
 # Variables
 VENV_DIR = .venv
-PYTHON_VERSION_CHECK = python3.12 --version
+PYTHON_VERSION_CHECK = python3.11 --version
 PIP = $(VENV_DIR)/bin/pip
-PYTHON = $(VENV_DIR)/bin/python3.12
+PYTHON = $(VENV_DIR)/bin/python3.11
 BREW = brew  
 
 .PHONY: build up down restart logs health shell tests reset-db init-db alembic migrate celery install-deps install-dev-deps check-versions format ci update-python repomix
@@ -88,13 +88,13 @@ tests:
 # Install production dependencies locally (in virtual environment)
 # SDLC: Development (setup local env), Testing (local testing outside Docker)
 install-deps:
-	python3.12 -m venv $(VENV_DIR)
+	python3.11 -m venv $(VENV_DIR)
 	. $(VENV_DIR)/bin/activate && $(PIP) install -r requirements.txt
 
 # Install development dependencies locally (in virtual environment)
 # SDLC: Development (setup linting/formatting tools), Testing (pre-CI checks)
 install-dev-deps:
-	python3.12 -m venv $(VENV_DIR)
+	python3.11 -m venv $(VENV_DIR)
 	. $(VENV_DIR)/bin/activate && $(PIP) install -r requirements-dev.txt
 
 # Check package versions in local virtual environment and Docker
@@ -120,15 +120,15 @@ ci:
 	. $(VENV_DIR)/bin/activate && black --check .
 	. $(VENV_DIR)/bin/activate && mypy .
 
-# Update Python to 3.12
+# Update Python to 3.11
 update-python:
-	@echo "Updating Homebrew and Python to 3.12..."
+	@echo "Updating Homebrew and Python to 3.11..."
 	@$(BREW) update
-	@$(BREW) install python@3.12 || $(BREW) upgrade python@3.12
+	@$(BREW) install python@3.11 || $(BREW) upgrade python@3.11
 	@echo "Removing old virtual environment (if exists)..."
 	@rm -rf $(VENV_DIR)
 	@echo "Creating new virtual environment..."
-	@python3.12 -m venv $(VENV_DIR)
+	@python3.11 -m venv $(VENV_DIR)
 
 # Build and compile RepoMix file for AI Analysis
 repomix:

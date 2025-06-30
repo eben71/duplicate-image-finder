@@ -1,26 +1,19 @@
-FROM python:3.12-slim
+# mcr.microsoft.com/playwright/python
+# https://mcr.microsoft.com/en-us/artifact/mar/playwright/python
+# https://github.com/microsoft/playwright-python/releases
+FROM mcr.microsoft.com/playwright/python:v1.53.0
 
 WORKDIR /app
 
-# Install Python + system packages
-RUN apt-get update && \
-    apt-get install -y \
-    curl wget gnupg2 \
-    libglib2.0-0 libnss3 libgconf-2-4 libfontconfig1 libxss1 libasound2 \
-    libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxdamage1 \
-    libxrandr2 libgbm1 libx11-xcb1 libxcb1 libxext6 libxfixes3 libgtk-3-0 \
-    libxkbcommon0 libnspr4 libnss3 libexpat1 libdbus-1-3 libatspi2.0-0 \
-    libgdk-pixbuf2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Playwright + browsers
-RUN pip install playwright && playwright install
-
+# Copy only requirements.txt first for caching
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
+# Set PYTHONPATH early for everything
 ENV PYTHONPATH=/app
 
+# Copy application code last to avoid invalidating dependency layer
 COPY ./backend ./backend
 
+# Default command (overridden in docker-compose)
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

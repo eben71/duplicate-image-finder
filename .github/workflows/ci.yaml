@@ -56,7 +56,7 @@ jobs:
     # ---- 1. Define a build matrix if you want to test multiple interpreters ----
     strategy:
       matrix:
-        python-version: ["3.12"]   # add 3.11 here later if you wish
+        python-version: ["3.11"]   # add 3.12 here later if you wish
 
     steps:
     - name: Checkout

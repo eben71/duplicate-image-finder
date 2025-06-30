@@ -33,7 +33,7 @@ This is a boilerplate backend stack for building a scalable image processing app
 ### Prerequisites
 
 - **Docker** and **Docker Compose** for running services
-- **Python 3.12** for local development (optional)
+- **Python 3.11** for local development (optional)
 - **Make** for running commands (optional, can run Docker commands directly)
 
 ### 1. Clone the Repository
@@ -197,6 +197,49 @@ Dependencies are updated weekly via Dependabot, configured in `.github/dependabo
   source .venv/bin/activate
   pip install -r requirements-dev.txt
   ```
+
+---
+
+## 🧪 Playwright Docker Image Usage
+
+This project uses the official [Playwright Docker image](https://mcr.microsoft.com/en-us/artifact/mar/playwright/python) to support browser automation for scraping Google Photos.
+
+### 🔍 Why This Image?
+
+- ✅ Includes Python 3.11, Chromium, Firefox, and WebKit preinstalled
+- ✅ Installs all necessary system libraries (GTK, X11, audio, fonts)
+- ✅ Removes the need to install Playwright and its dependencies manually
+- ✅ Optimized for CI/CD and Docker-based development workflows
+
+### 🐍 Why Python 3.11?
+
+- Official Playwright images use Python 3.11 (stable, fast, and async-friendly)
+- Faster performance than 3.10
+- Maintained and aligned with Playwright releases
+
+> The image we currently use is:  
+> `mcr.microsoft.com/playwright/python:v1.53.1`
+
+And in `requirements.txt` we match it with:
+
+```txt
+playwright==1.53.1
+```
+
+### 🔐 Version Sync & Validation
+
+To prevent version drift between the Python bindings and the CLI, we run a version check during app startup (`core/version_check.py`). This ensures:
+
+- `playwright.__version__` (Python)
+- `playwright --version` (CLI)
+
+...are exactly matched, or the app fails fast.
+
+### 📦 Tracking Updates
+
+- Docker images: [Playwright @ MCR](https://mcr.microsoft.com/en-us/artifact/mar/playwright/python)
+- Python releases: [GitHub Releases](https://github.com/microsoft/playwright-python/releases)
+- Playwright browser changelog: [playwright.dev](https://playwright.dev/python/docs/release-notes)
 
 ---
 
