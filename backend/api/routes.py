@@ -1,15 +1,22 @@
 from fastapi import APIRouter, Query
 from backend.models.enums import IngestionMode
 
-router = APIRouter()
+api_router = APIRouter()
 
 
-@router.get("/health")
+# --- Health Routes ---
+@api_router.get("/health")
 def health():
     return {"status": "ok"}
 
 
-@router.post("/ingest")
+# --- User Routes ---
+
+# --- Auth Routes ---
+
+
+# --- Ingestion Routes ---
+@api_router.post("/ingest")
 def ingest_images(
     user_id: int, mode: IngestionMode = Query(default=IngestionMode.SCRAPE)
 ):

@@ -1,7 +1,4 @@
-# mcr.microsoft.com/playwright/python
-# https://mcr.microsoft.com/en-us/artifact/mar/playwright/python
-# https://github.com/microsoft/playwright-python/releases
-FROM mcr.microsoft.com/playwright/python:v1.53.0
+FROM python:3.12-slim
 
 WORKDIR /app
 

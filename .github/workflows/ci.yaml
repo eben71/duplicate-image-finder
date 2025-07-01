@@ -56,7 +56,7 @@ jobs:
     # ---- 1. Define a build matrix if you want to test multiple interpreters ----
     strategy:
       matrix:
-        python-version: ["3.11"]   # add 3.12 here later if you wish
+        python-version: ["3.12"]   # add 3.11 here later if you wish
 
     steps:
     - name: Checkout
@@ -92,10 +92,6 @@ jobs:
     
     - name: Docker build
       run: make build
-
-    - name: Verify Playwright version match
-      run: |
-        python -c "from core.version_check import check_playwright_version; check_playwright_version()"
 
     # ---------- 🛠️  Alembic smoke-test ----------
     - name: Run Alembic migrations inside app container

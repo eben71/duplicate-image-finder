@@ -2,9 +2,7 @@
 
 # Duplicate Image Finder Backend (FastAPI + Celery + Redis + Postgres)
 
-![Playwright Version](https://img.shields.io/badge/Playwright-v1.53.1-blue?logo=playwright)
-
-This is a boilerplate backend stack for building a scalable image processing application that identifies duplicate images. It includes a FastAPI backend, a basic FastAPI-based frontend, and a Playwright-based web scraper for image ingestion. The project is designed for development, testing, and deployment with Docker, CI/CD integration, and a robust testing suite.
+This is a modular backend stack for a SaaS application that identifies duplicate or similar images using AI. It includes a FastAPI backend, background processing with Celery, and a per-user OAuth2 integration with Google Photos for secure, API-based image ingestion. The system is designed for scalability, user isolation, and efficient image analysis with CLIP, YOLO, and perceptual hashing. It supports containerized development with Docker, automated CI/CD, and a robust testing suite.
 
 ## 🔧 Tech Stack
 
@@ -13,7 +11,6 @@ This is a boilerplate backend stack for building a scalable image processing app
 - **PostgreSQL**: Stores users, image metadata, embeddings
 - **Docker + Docker Compose**: Containerized development and CI-ready environment
 - **SQLModel + Alembic**: Declarative database models with migration support
-- **Playwright**: Google Photos screen scraping
 - **GitHub Actions**: CI/CD with linting and migration checks
 - **Dependabot**: Dependency updates with reviewer assignment
 - **Pytest**: Unit and integration testing with coverage
@@ -24,7 +21,6 @@ This is a boilerplate backend stack for building a scalable image processing app
 - **Image Ingestion**: Supports three modes (`SCRAPE`, `API`, `UPLOAD`) for importing images
 - **Duplicate Detection**: Generates embeddings for images to identify duplicates
 - **Scalable Architecture**: Uses Celery for asynchronous tasks and Redis for task queuing
-- **Web Scraping**: Playwright-based scraper for extracting images from web sources
 - **CI/CD Integration**: Automated testing, linting, and dependency management via GitHub Actions
 - **Frontend**: Basic HTML welcome page served by FastAPI
 
@@ -35,7 +31,7 @@ This is a boilerplate backend stack for building a scalable image processing app
 ### Prerequisites
 
 - **Docker** and **Docker Compose** for running services
-- **Python 3.11** for local development (optional)
+- **Python 3.12** for local development (optional)
 - **Make** for running commands (optional, can run Docker commands directly)
 
 ### 1. Clone the Repository
@@ -49,10 +45,6 @@ cd duplicate-image-finder-backend
 
 Copy the example environment file and update it with your configuration:
 
-```bash
-cp backend/playwright_scraper/.env.example .env
-```
-
 Key environment variables (see `.env.example`):
 
 | Variable             | Description                                 | Example Value                                 |
@@ -60,7 +52,7 @@ Key environment variables (see `.env.example`):
 | `DATABASE_URL`       | PostgreSQL connection string                | `postgresql://postgres:pass@db:5432/db`       |
 | `CELERY_BROKER_URL`  | Redis URL for Celery broker                 | `redis://redis:6379/0`                        |
 | `CELERY_BACKEND_URL` | Redis URL for Celery backend                | `redis://redis:6379/1`                        |
-| `GOOGLE_PHOTOS_URL`  | URL for web scraping (Playwright)           | `https://photos.google.com/`                  |
+| `GOOGLE_PHOTOS_URL`  | URL for web scraping                        | `https://photos.google.com/`                  |
 | `FASTAPI_ENDPOINT`   | FastAPI endpoint for scraped image metadata | `http://localhost:8000/api/v1/images/scraped` |
 | `BATCH_SIZE`         | Number of images to process per batch       | `50`                                          |
 | `TIMEOUT`            | Timeout for scraping/API requests (ms)      | `30000`                                       |
@@ -138,13 +130,13 @@ Dependencies: `pytest`, `pytest-asyncio`, `pytest-cov`.
 ```
 .
 ├── backend/
+├── core/                     # Shared logic (logging, constants, utils)
 │   ├── alembic/              # DB migrations
 │   ├── alembic.ini
 │   ├── api/                  # API routes
 │   ├── config/               # Pydantic settings
 │   ├── db/                   # Session + engine
 │   ├── models/               # SQLModel ORM (User, Image, Embedding)
-│   ├── playwright_scraper/   # Browser scraping (Playwright)
 │   ├── services/             # Business logic and Celery
 │   └── main.py               # FastAPI entrypoint
 ├── frontend/                 # Uvicorn-hosted welcome page
@@ -199,49 +191,6 @@ Dependencies are updated weekly via Dependabot, configured in `.github/dependabo
   source .venv/bin/activate
   pip install -r requirements-dev.txt
   ```
-
----
-
-## 🧪 Playwright Docker Image Usage
-
-This project uses the official [Playwright Docker image](https://mcr.microsoft.com/en-us/artifact/mar/playwright/python) to support browser automation for scraping Google Photos.
-
-### 🔍 Why This Image?
-
-- ✅ Includes Python 3.11, Chromium, Firefox, and WebKit preinstalled
-- ✅ Installs all necessary system libraries (GTK, X11, audio, fonts)
-- ✅ Removes the need to install Playwright and its dependencies manually
-- ✅ Optimized for CI/CD and Docker-based development workflows
-
-### 🐍 Why Python 3.11?
-
-- Official Playwright images use Python 3.11 (stable, fast, and async-friendly)
-- Faster performance than 3.10
-- Maintained and aligned with Playwright releases
-
-> The image we currently use is:  
-> `mcr.microsoft.com/playwright/python:v1.53.1`
-
-And in `requirements.txt` we match it with:
-
-```txt
-playwright==1.53.1
-```
-
-### 🔐 Version Sync & Validation
-
-To prevent version drift between the Python bindings and the CLI, we run a version check during app startup (`core/version_check.py`). This ensures:
-
-- `playwright.__version__` (Python)
-- `playwright --version` (CLI)
-
-...are exactly matched, or the app fails fast.
-
-### 📦 Tracking Updates
-
-- Docker images: [Playwright @ MCR](https://mcr.microsoft.com/en-us/artifact/mar/playwright/python)
-- Python releases: [GitHub Releases](https://github.com/microsoft/playwright-python/releases)
-- Playwright browser changelog: [playwright.dev](https://playwright.dev/python/docs/release-notes)
 
 ---
 

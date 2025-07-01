@@ -5,7 +5,6 @@ httpx
 numpy==2.1.2
 opencv-python==4.11.0.86
 pillow==11.2.1
-playwright==1.53.0
 psycopg2-binary==2.9.10
 pydantic==2.11.7
 pydantic_core
