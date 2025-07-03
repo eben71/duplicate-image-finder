@@ -1,5 +1,6 @@
 alembic==1.16.2
 celery==5.5.3
+cryptography>=42.0.0
 fastapi==0.115.14
 httpx
 numpy==2.1.2

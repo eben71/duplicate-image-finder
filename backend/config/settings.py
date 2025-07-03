@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     CELERY_BACKEND_URL: str = Field(..., validation_alias="CELERY_BACKEND_URL")
     GOOGLE_PHOTOS_URL: str = Field(..., validation_alias="GOOGLE_PHOTOS_URL")
     FASTAPI_ENDPOINT: str = Field(..., validation_alias="FASTAPI_ENDPOINT")
+    GOOGLE_CLIENT_ID: str = Field(..., validation_alias="GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET: str = Field(..., validation_alias="GOOGLE_CLIENT_SECRET")
+    GOOGLE_REDIRECT_URI: str = Field(..., validation_alias="GOOGLE_REDIRECT_URI")
+    ENCRYPTION_KEY: str = Field(..., validation_alias="ENCRYPTION_KEY")
 
     # ───────────────────────── Optional / defaults ─────────────────────────────
     SESSION_COOKIE_PATH: Optional[Path] = Field(
@@ -57,6 +61,10 @@ def get_settings() -> Settings:
         settings.require_env("CELERY_BACKEND_URL")
         settings.require_env("GOOGLE_PHOTOS_URL")
         settings.require_env("FASTAPI_ENDPOINT")
+        settings.require_env("GOOGLE_CLIENT_ID")
+        settings.require_env("GOOGLE_CLIENT_SECRET")
+        settings.require_env("GOOGLE_REDIRECT_URI")
+        settings.require_env("ENCRYPTION_KEY")
         return settings
 
     except ValidationError as exc:
