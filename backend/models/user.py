@@ -16,10 +16,10 @@ class User(SQLModel, table=True):  # type: ignore
         sa_column=Column(SAEnum(IngestionMode, name="ingestionmode")),
     )
 
-    _encrypted_access_token: Optional[str] = Field(
+    encrypted_access_token: Optional[str] = Field(
         default=None, alias="google_access_token"
     )
-    _encrypted_refresh_token: Optional[str] = Field(
+    encrypted_refresh_token: Optional[str] = Field(
         default=None, alias="google_refresh_token"
     )
 
@@ -27,13 +27,16 @@ class User(SQLModel, table=True):  # type: ignore
         default=None,
         sa_column=Column(DateTime(timezone=True)),  # Enforce UTC in DB
     )
+
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
+
     updated_at: Optional[datetime] = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
+
     deleted_at: Optional[datetime] = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
@@ -45,21 +48,21 @@ class User(SQLModel, table=True):  # type: ignore
         return v
 
     def set_google_tokens(self, access_token: str, refresh_token: Optional[str]):
-        self._encrypted_access_token = encrypt(access_token)
+        self.encrypted_access_token = encrypt(access_token)
         if refresh_token:
-            self._encrypted_refresh_token = encrypt(refresh_token)
+            self.encrypted_refresh_token = encrypt(refresh_token)
 
     def get_google_access_token(self) -> Optional[str]:
         return (
-            decrypt(self._encrypted_access_token)
-            if self._encrypted_access_token
+            decrypt(self.encrypted_access_token)
+            if self.encrypted_access_token
             else None
         )
 
     def get_google_refresh_token(self) -> Optional[str]:
         return (
-            decrypt(self._encrypted_refresh_token)
-            if self._encrypted_refresh_token
+            decrypt(self.encrypted_refresh_token)
+            if self.encrypted_refresh_token
             else None
         )
 
