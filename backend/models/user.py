@@ -1,9 +1,9 @@
 from sqlmodel import SQLModel, Field
 from sqlalchemy import Column, Enum as SAEnum, DateTime
+from pydantic import EmailStr, validator
 from datetime import datetime, timedelta, timezone
 from backend.models.enums import IngestionMode
 from typing import Optional
-from pydantic import EmailStr, validator
 from core.crypto import encrypt, decrypt
 
 
@@ -19,6 +19,7 @@ class User(SQLModel, table=True):  # type: ignore
         default=IngestionMode.API,
         sa_column=Column(SAEnum(IngestionMode, name="ingestionmode")),
     )
+    requires_reauth: bool = Field(default=False)
 
     encrypted_access_token: Optional[str] = Field(
         default=None, alias="google_access_token"

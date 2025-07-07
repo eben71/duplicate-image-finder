@@ -1,8 +1,9 @@
 import pytest
+from pydantic import ValidationError
 from datetime import datetime, timedelta, timezone
 from backend.models.user import IngestionMode
+from core.google_oauth import is_token_expired
 from tests.common.test_user_factory import make_test_user
-from pydantic import ValidationError
 
 
 def test_create_user():
@@ -48,6 +49,22 @@ def test_token_expiry_is_set_to_utc():
     user.set_google_tokens("abc", "xyz", expires_in=3600)
     assert user.token_expiry is not None
     assert user.token_expiry.tzinfo == timezone.utc
+
+
+def test_token_expired_logic():
+    user = make_test_user(with_tokens=True)
+
+    # simulate expiry in the past
+    user.token_expiry = datetime.now(timezone.utc) - timedelta(minutes=5)
+    assert is_token_expired(user) is True
+
+    # simulate valid token in the future
+    user.token_expiry = datetime.now(timezone.utc) + timedelta(hours=1)
+    assert is_token_expired(user) is False
+
+    # no expiry set
+    user.token_expiry = None
+    assert is_token_expired(user) is True
 
 
 def test_reject_non_utc_datetime():
