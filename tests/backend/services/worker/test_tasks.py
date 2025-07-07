@@ -1,15 +1,13 @@
 from datetime import datetime
-from backend.models.user import User, IngestionMode
 from backend.models.image import Image
 from backend.models.embedding import ImageEmbedding
 from backend.services.worker.tasks import generate_embedding
+from tests.common.test_user_factory import make_test_user
 
 
 def test_generate_embedding_creates_vector(session):
     # Create a user first
-    user = User(
-        email="test2@example.com", full_name="Test User", mode=IngestionMode.SCRAPE
-    )
+    user = make_test_user()
     session.add(user)
     session.commit()
     session.refresh(user)

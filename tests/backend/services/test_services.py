@@ -1,11 +1,11 @@
-from backend.models.user import User, IngestionMode
 from backend.services.ingestion import fake_scrape_images
 from unittest.mock import patch
+from tests.common.test_user_factory import make_test_user
 
 
 @patch("backend.services.ingestion.generate_embedding.delay")
 def test_fake_scrape_images_creates_and_returns(mock_delay, session):
-    user = User(email="test@example.com", full_name="Test", mode=IngestionMode.SCRAPE)
+    user = make_test_user()
     session.add(user)
     session.commit()
     session.refresh(user)
