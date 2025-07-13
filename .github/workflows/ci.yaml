@@ -91,15 +91,17 @@ jobs:
     - name: Docker build
       run: make build
 
-    - name: Debug PostgreSQL logs
+    - name: Get PostgreSQL container name
       run: |
-        docker-compose logs duplicate-image-finder-db-1
-
+        CONTAINER_NAME=$(docker ps -q -f "name=build-test-lint-postgres-1")
+        echo "POSTGRES_CONTAINER=$CONTAINER_NAME" >> $GITHUB_ENV
+    - name: Debug PostgreSQL logs
+      run: docker logs $POSTGRES_CONTAINER
     - name: Run Alembic migrations inside app container
       run: |
         docker-compose up -d
-        # Wait for the duplicate-image-finder-db-1 service to be healthy using pg_isready
-        docker-compose exec duplicate-image-finder-db-1 sh -c "while ! pg_isready -U testuser -d testdb; do sleep 1; done"
+        # Wait for the postgres service to be healthy using pg_isready
+        docker exec $POSTGRES_CONTAINER sh -c "while ! pg_isready -U testuser -d testdb; do sleep 1; done"
         docker-compose exec -T app alembic -c backend/alembic.ini upgrade head
         docker-compose exec -T app alembic -c backend/alembic.ini revision --autogenerate -m "check" || true
         test -z "$(git status --porcelain | grep migrations)" || (echo "Missing migration!" && exit 1)
