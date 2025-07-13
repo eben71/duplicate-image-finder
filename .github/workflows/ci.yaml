@@ -91,11 +91,14 @@ jobs:
     - name: Docker build
       run: make build
 
+    - name: Debug PostgreSQL logs
+      run: docker-compose logs postgres
+
     - name: Run Alembic migrations inside app container
       run: |
         docker-compose up -d
-        # Wait for the postgres service to be healthy
-        while ! docker ps | grep -q "postgres.*Up.*Healthy"; do sleep 1; done
+        # Wait for the postgres service to be healthy using pg_isready
+        docker-compose exec postgres sh -c "while ! pg_isready -U testuser -d testdb; do sleep 1; done"
         docker-compose exec -T app alembic -c backend/alembic.ini upgrade head
         docker-compose exec -T app alembic -c backend/alembic.ini revision --autogenerate -m "check" || true
         test -z "$(git status --porcelain | grep migrations)" || (echo "Missing migration!" && exit 1)
