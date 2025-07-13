@@ -92,7 +92,9 @@ jobs:
       run: make build
 
     - name: Debug PostgreSQL logs
-      run: docker-compose logs postgres
+      run: |
+        docker compose ps
+        docker-compose logs db
 
     - name: Run Alembic migrations inside app container
       run: |
