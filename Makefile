@@ -81,8 +81,11 @@ celery:
 # Run tests in container with coverage
 # SDLC: Development (verify code), Testing (unit/integration tests), Deployment (CI pipeline)
 tests:
+	docker compose up -d db
+	docker compose exec db sh -c "while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done"
 	docker compose run --rm app pytest tests --cov=backend --cov=frontend --disable-warnings
-	
+	docker compose stop db
+		
 # --- Local: Dependency Management (requires virtual environment) ---
 # Local tasks (linting, formatting) require a virtual environment (`source .venv/bin/activate`).
 # Install production dependencies locally (in virtual environment)
@@ -128,7 +131,7 @@ update-python:
 	@echo "Removing old virtual environment (if exists)..."
 	@rm -rf $(VENV_DIR)
 	@echo "Creating new virtual environment..."
-	@python3.12 -m venv $(VENV_DIR)
+	@python3.1 -m venv $(VENV_DIR)
 
 # Build and compile RepoMix file for AI Analysis
 repomix:
