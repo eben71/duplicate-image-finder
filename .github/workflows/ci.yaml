@@ -98,7 +98,8 @@ jobs:
       run: |
         # Wait briefly to ensure services are started
         sleep 5
-        CONTAINER_NAME=$(docker ps -q -f "name=build-test-lint-postgres" -f "status=running")
+        # Filter by image and status, then get the first running postgres container
+        CONTAINER_NAME=$(docker ps -q -f "ancestor=postgres:16" -f "status=running" | head -n 1)
         if [ -z "$CONTAINER_NAME" ]; then
           echo "No PostgreSQL container found. Listing all containers:"
           docker ps -a
