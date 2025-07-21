@@ -85,7 +85,7 @@ tests:
 	docker compose exec db sh -c "while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done"
 	docker compose run --rm app pytest tests --cov=backend --cov=frontend --disable-warnings
 	docker compose stop db
-		
+
 # --- Local: Dependency Management (requires virtual environment) ---
 # Local tasks (linting, formatting) require a virtual environment (`source .venv/bin/activate`).
 # Install production dependencies locally (in virtual environment)

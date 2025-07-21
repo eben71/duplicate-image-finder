@@ -3,7 +3,7 @@ import httpx
 from sqlmodel import Session
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
-from tests.common.test_user_factory import make_test_user
+from tests.utils.factories import make_test_user
 from core.google_oauth import (
     refresh_access_token,
     get_fresh_access_token,
@@ -11,6 +11,7 @@ from core.google_oauth import (
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_refresh_token_success():
     user = make_test_user()
     user.set_google_tokens("expired_token", "valid_refresh_token", expires_in=-10)
@@ -35,6 +36,7 @@ async def test_refresh_token_success():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_refresh_token_missing():
     user = make_test_user()
     user.encrypted_refresh_token = None  # Simulate no refresh token
@@ -48,6 +50,7 @@ async def test_refresh_token_missing():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_refresh_token_rejected_by_google():
     user = make_test_user()
     user.set_google_tokens("expired", "revoked", expires_in=-10)
@@ -71,6 +74,7 @@ async def test_refresh_token_rejected_by_google():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_get_fresh_access_token_triggers_refresh():
     user = make_test_user()
     user.set_google_tokens("expired", "refresh123", expires_in=-10)

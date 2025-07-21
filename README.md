@@ -54,9 +54,6 @@ Key environment variables (see `.env.example`):
 | `CELERY_BACKEND_URL` | Redis URL for Celery backend                | `redis://redis:6379/1`                        |
 | `GOOGLE_PHOTOS_URL`  | URL for web scraping                        | `https://photos.google.com/`                  |
 | `FASTAPI_ENDPOINT`   | FastAPI endpoint for scraped image metadata | `http://localhost:8000/api/v1/images/scraped` |
-| `BATCH_SIZE`         | Number of images to process per batch       | `50`                                          |
-| `TIMEOUT`            | Timeout for scraping/API requests (ms)      | `30000`                                       |
-| `SCROLL_DEPTH`       | Number of page scrolls for scraping         | `5`                                           |
 
 ### 3. Build & Start Services
 

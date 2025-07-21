@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = Field(..., validation_alias="CELERY_BROKER_URL")
     CELERY_BACKEND_URL: str = Field(..., validation_alias="CELERY_BACKEND_URL")
     GOOGLE_PHOTOS_URL: str = Field(..., validation_alias="GOOGLE_PHOTOS_URL")
+    GOOGLE_SEARCH_URL: str = Field(..., validation_alias="GOOGLE_SEARCH_URL")
+    GOOGLE_USERINFO_URL: str = Field(..., validation_alias="GOOGLE_USERINFO_URL")
     FASTAPI_ENDPOINT: str = Field(..., validation_alias="FASTAPI_ENDPOINT")
     GOOGLE_CLIENT_ID: str = Field(..., validation_alias="GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET: str = Field(..., validation_alias="GOOGLE_CLIENT_SECRET")
@@ -25,12 +27,11 @@ class Settings(BaseSettings):
     SESSION_COOKIE_PATH: Optional[Path] = Field(
         Path("~/.gp_session.json").expanduser(), validation_alias="SESSION_COOKIE_PATH"
     )
-    INGESTION_MODE: str = Field("scrape", validation_alias="INGESTION_MODE")
-    BATCH_SIZE: int = Field(50, validation_alias="BATCH_SIZE")
-    TIMEOUT: int = Field(30_000, validation_alias="TIMEOUT")  # ms
-    SCROLL_DEPTH: int = Field(5, validation_alias="SCROLL_DEPTH")
-    SCROLL_LIMIT: int = Field(100, validation_alias="SCROLL_LIMIT")
-    HEADLESS_MODE: bool = Field(True, validation_alias="HEADLESS")
+    INGESTION_MODE: str = Field("api", validation_alias="INGESTION_MODE")
+    INGESTION_YEAR: Optional[int] = None
+    INGESTION_START_PAGE: int = Field(1, validation_alias="INGESTION_START_PAGE")
+    INGESTION_END_PAGE: Optional[int] = None
+    INGESTION_PAGE_SIZE: int = Field(100, validation_alias="INGESTION_PAGE_SIZE")
     LOG_LEVEL: int = logging.DEBUG
 
     # Pydantic v2 config
@@ -60,6 +61,8 @@ def get_settings() -> Settings:
         settings.require_env("CELERY_BROKER_URL")
         settings.require_env("CELERY_BACKEND_URL")
         settings.require_env("GOOGLE_PHOTOS_URL")
+        settings.require_env("GOOGLE_SEARCH_URL")
+        settings.require_env("GOOGLE_USERINFO_URL")
         settings.require_env("FASTAPI_ENDPOINT")
         settings.require_env("GOOGLE_CLIENT_ID")
         settings.require_env("GOOGLE_CLIENT_SECRET")

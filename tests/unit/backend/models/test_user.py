@@ -3,9 +3,10 @@ from pydantic import ValidationError
 from datetime import datetime, timedelta, timezone
 from backend.models.user import IngestionMode
 from core.google_oauth import is_token_expired
-from tests.common.test_user_factory import make_test_user
+from tests.utils.factories import make_test_user
 
 
+@pytest.mark.unit
 def test_create_user():
     user = make_test_user(
         email="test@example.com", full_name="Test", ingestion_mode=IngestionMode.SCRAPE
@@ -13,6 +14,22 @@ def test_create_user():
     assert user.email == "test@example.com"
     assert user.full_name == "Test"
     assert user.ingestion_mode == IngestionMode.SCRAPE
+
+
+@pytest.mark.unit
+def test_create_user_from_google_login():
+    user = make_test_user(
+        email="test@example.com",
+        full_name="Test",
+        profile_picture="https://example.com/pic.jpg",
+    )
+
+    user.set_google_tokens("abc123", "refresh123", expires_in=3600)
+
+    assert user.get_google_access_token() == "abc123"
+    assert user.get_google_refresh_token() == "refresh123"
+    assert user.token_expiry > datetime.now(timezone.utc)
+    assert user.requires_reauth is False
 
 
 def test_create_user_with_default_ingestion():

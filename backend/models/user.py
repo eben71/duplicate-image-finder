@@ -19,11 +19,13 @@ class User(SQLModel, table=True):  # type: ignore
         default=IngestionMode.API,
         sa_column=Column(SAEnum(IngestionMode, name="ingestionmode")),
     )
+    profile_picture: Optional[str] = Field(default=None, max_length=2048)
     requires_reauth: bool = Field(default=False)
 
     encrypted_access_token: Optional[str] = Field(
         default=None, alias="google_access_token"
     )
+
     encrypted_refresh_token: Optional[str] = Field(
         default=None, alias="google_refresh_token"
     )
