@@ -2,7 +2,7 @@ import pytest
 import tempfile
 from httpx import AsyncClient, ASGITransport
 from sqlmodel import SQLModel, Session, create_engine
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Generator
 
 from backend.main import app
 from backend.db.session import get_session
@@ -23,7 +23,7 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 # 🧪 Provide a clean DB session per test
 @pytest.fixture(name="session")
-def session_fixture() -> Session:
+def session_fixture() -> Generator[Session, None, None]:
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
         yield session
