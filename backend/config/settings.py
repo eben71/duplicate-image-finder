@@ -5,8 +5,8 @@ import sys
 import logging
 from pathlib import Path
 from typing import Optional, no_type_check
-from pydantic_settings import BaseSettings
 from pydantic import ValidationError, Field
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):

@@ -3,10 +3,13 @@ from backend.services.worker.celery_app import celery_app
 from backend.models.embedding import ImageEmbedding
 from backend.db.session import engine
 from sqlmodel import Session
+from typing import Optional
 
 
 @celery_app.task
-def generate_embedding(image_id: int, session_override: Session = None):
+def generate_embedding(
+    image_id: int, session_override: Optional[Session] = None
+) -> None:
     """
     Simulates generating a 512-dim embedding and stores it.
     Allows session override for test injection.

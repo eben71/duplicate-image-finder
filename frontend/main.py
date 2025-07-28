@@ -5,8 +5,9 @@ app = FastAPI(title="Duplicate Image Finder Frontend")
 
 
 @app.get("/", response_class=HTMLResponse)
-async def welcome_page():
-    return """
+async def welcome_page() -> HTMLResponse:
+    return HTMLResponse(
+        content="""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -36,3 +37,4 @@ async def welcome_page():
     </body>
     </html>
     """
+    )

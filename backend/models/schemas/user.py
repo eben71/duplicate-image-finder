@@ -11,5 +11,4 @@ class UserRead(BaseModel):
     ingestion_mode: IngestionMode
     requires_reauth: Optional[bool] = False
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}

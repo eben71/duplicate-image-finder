@@ -3,7 +3,7 @@ from sqlalchemy import Column, Enum as SAEnum, DateTime
 from pydantic import EmailStr, validator
 from datetime import datetime, timedelta, timezone
 from backend.models.enums import IngestionMode
-from typing import Optional
+from typing import Optional, Any
 from core.crypto import encrypt, decrypt
 
 
@@ -49,7 +49,7 @@ class User(SQLModel, table=True):  # type: ignore
     )
 
     @validator("token_expiry", "created_at", "updated_at", "deleted_at")
-    def ensure_utc(cls, v):
+    def ensure_utc(cls, v: Optional[datetime]) -> Optional[datetime]:
         if v is not None and v.tzinfo != timezone.utc:
             raise ValueError("Datetime must be in UTC")
         return v
@@ -59,7 +59,7 @@ class User(SQLModel, table=True):  # type: ignore
         access_token: str,
         refresh_token: Optional[str],
         expires_in: Optional[int] = None,
-    ):
+    ) -> None:
         self.encrypted_access_token = encrypt(access_token)
         if refresh_token:
             self.encrypted_refresh_token = encrypt(refresh_token)
@@ -82,7 +82,7 @@ class User(SQLModel, table=True):  # type: ignore
             else None
         )
 
-    def dict(self, *args, **kwargs):
+    def dict(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         kwargs.setdefault(
             "exclude", {"_encrypted_access_token", "_encrypted_refresh_token"}
         )

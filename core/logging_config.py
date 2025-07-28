@@ -3,7 +3,7 @@ import logging
 from backend.config.settings import settings
 
 
-def configure_logging():
+def configure_logging() -> None:
     os.makedirs("logs", exist_ok=True)
 
     logging.basicConfig(

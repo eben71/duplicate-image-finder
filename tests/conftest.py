@@ -1,7 +1,8 @@
 import pytest
 import tempfile
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 from sqlmodel import SQLModel, Session, create_engine
+from typing import AsyncGenerator
 
 from backend.main import app
 from backend.db.session import get_session
@@ -22,18 +23,21 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 # 🧪 Provide a clean DB session per test
 @pytest.fixture(name="session")
-def session_fixture():
+def session_fixture() -> Session:
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
         yield session
     SQLModel.metadata.drop_all(engine)
 
 
-# ⚙️ Provide FastAPI test client with overridden DB session
 @pytest.fixture(name="client")
-def client_fixture(session: Session):
-    def override_get_session():
+async def client_fixture(session: Session) -> AsyncGenerator[AsyncClient, None]:
+    def override_get_session() -> Session:
         return session
 
     app.dependency_overrides[get_session] = override_get_session
-    return TestClient(app)
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        yield client
+    app.dependency_overrides.clear()

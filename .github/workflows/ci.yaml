@@ -50,6 +50,9 @@ jobs:
       OOGLE_USERINFO: https://www.googleapis.com/oauth2/v3/userinfo
       SESSION_COOKIE_PATH: ~/.gp_session.json
       INGESTION_MODE: api
+      INGESTION_YEAR: 2025
+      INGESTION_START_PAGE: 1
+      INGESTION_END_PAGE: 100
 
     strategy:
       matrix:

@@ -12,7 +12,7 @@ from core.google_oauth import (
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_refresh_token_success():
+async def test_refresh_token_success() -> None:
     user = make_test_user()
     user.set_google_tokens("expired_token", "valid_refresh_token", expires_in=-10)
 
@@ -32,12 +32,14 @@ async def test_refresh_token_success():
 
     assert not user.requires_reauth
     assert user.get_google_access_token() == "new_access_token"
-    assert user.token_expiry > datetime.now(timezone.utc)
+    assert user.token_expiry is not None and user.token_expiry > datetime.now(
+        timezone.utc
+    )
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_refresh_token_missing():
+async def test_refresh_token_missing() -> None:
     user = make_test_user()
     user.encrypted_refresh_token = None  # Simulate no refresh token
     session = AsyncMock(spec=Session)
@@ -51,7 +53,7 @@ async def test_refresh_token_missing():
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_refresh_token_rejected_by_google():
+async def test_refresh_token_rejected_by_google() -> None:
     user = make_test_user()
     user.set_google_tokens("expired", "revoked", expires_in=-10)
 
@@ -75,7 +77,7 @@ async def test_refresh_token_rejected_by_google():
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_get_fresh_access_token_triggers_refresh():
+async def test_get_fresh_access_token_triggers_refresh() -> None:
     user = make_test_user()
     user.set_google_tokens("expired", "refresh123", expires_in=-10)
 

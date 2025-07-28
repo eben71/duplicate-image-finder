@@ -7,7 +7,7 @@ from tests.utils.factories import make_test_user
 
 
 @pytest.mark.unit
-def test_create_user():
+def test_create_user() -> None:
     user = make_test_user(
         email="test@example.com", full_name="Test", ingestion_mode=IngestionMode.SCRAPE
     )
@@ -17,7 +17,7 @@ def test_create_user():
 
 
 @pytest.mark.unit
-def test_create_user_from_google_login():
+def test_create_user_from_google_login() -> None:
     user = make_test_user(
         email="test@example.com",
         full_name="Test",
@@ -28,23 +28,25 @@ def test_create_user_from_google_login():
 
     assert user.get_google_access_token() == "abc123"
     assert user.get_google_refresh_token() == "refresh123"
-    assert user.token_expiry > datetime.now(timezone.utc)
+    assert user.token_expiry is not None and user.token_expiry > datetime.now(
+        timezone.utc
+    )
     assert user.requires_reauth is False
 
 
-def test_create_user_with_default_ingestion():
+def test_create_user_with_default_ingestion() -> None:
     user = make_test_user(email="test@example.com")
     assert user.email == "test@example.com"
     assert user.full_name == "Test User"
     assert user.ingestion_mode == IngestionMode.API
 
 
-def test_invalid_email_rejected():
+def test_invalid_email_rejected() -> None:
     with pytest.raises(ValidationError):
         make_test_user(email="invalid-email")
 
 
-def test_token_encryption_decryption():
+def test_token_encryption_decryption() -> None:
     user = make_test_user()
     access_token = "mock_access"
     refresh_token = "mock_refresh"
@@ -55,20 +57,20 @@ def test_token_encryption_decryption():
     assert user.get_google_refresh_token() == refresh_token
 
 
-def test_created_at_is_utc_by_default():
+def test_created_at_is_utc_by_default() -> None:
     user = make_test_user()
     assert user.created_at.tzinfo is not None
     assert user.created_at.tzinfo.utcoffset(user.created_at) == timedelta(0)
 
 
-def test_token_expiry_is_set_to_utc():
+def test_token_expiry_is_set_to_utc() -> None:
     user = make_test_user()
     user.set_google_tokens("abc", "xyz", expires_in=3600)
     assert user.token_expiry is not None
     assert user.token_expiry.tzinfo == timezone.utc
 
 
-def test_token_expired_logic():
+def test_token_expired_logic() -> None:
     user = make_test_user(with_tokens=True)
 
     # simulate expiry in the past
@@ -84,7 +86,7 @@ def test_token_expired_logic():
     assert is_token_expired(user) is True
 
 
-def test_reject_non_utc_datetime():
+def test_reject_non_utc_datetime() -> None:
     # Build a naive datetime (no tzinfo)
     non_utc = datetime.now()
     with pytest.raises(ValidationError):
@@ -93,7 +95,7 @@ def test_reject_non_utc_datetime():
         )
 
 
-def test_updated_at_must_be_utc():
+def test_updated_at_must_be_utc() -> None:
     utc_now = datetime.now(timezone.utc)
     user = make_test_user(
         email="updated@example.com",
@@ -104,7 +106,7 @@ def test_updated_at_must_be_utc():
     assert user.updated_at.tzinfo == timezone.utc
 
 
-def test_deleted_at_must_be_utc():
+def test_deleted_at_must_be_utc() -> None:
     utc_now = datetime.now(timezone.utc)
     user = make_test_user(
         email="deleted@example.com",
@@ -115,7 +117,7 @@ def test_deleted_at_must_be_utc():
     assert user.deleted_at.tzinfo == timezone.utc
 
 
-def test_reject_non_utc_updated_at():
+def test_reject_non_utc_updated_at() -> None:
     naive_time = datetime.now()
     with pytest.raises(ValidationError):
         make_test_user(

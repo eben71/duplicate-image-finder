@@ -1,7 +1,8 @@
 from backend.services.worker.tasks import generate_embedding
+from typing import Any
 
 
-def test_generate_embedding_creates_vector(session):
+def test_generate_embedding_creates_vector(session: Any) -> None:
     # Assume test DB already has image with ID 123
     image_id = 123
     # Insert a dummy image row if needed...
