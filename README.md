@@ -108,7 +108,7 @@ make migrate
 Run tests inside the Docker container:
 
 ```bash
-make test
+make tests
 ```
 
 This executes `pytest` with coverage in the `app` container. Tests are located in the `tests/` directory, covering:
