@@ -12,6 +12,6 @@ async def test_ingest_endpoint(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_ingest_with_invalid_user_id(client: AsyncClient) -> None:
-    response = await client.post("/ingest?user_id=9999")
+    response = await client.post(f"{BASE}/ingest?user_id=9999")
     assert response.status_code == 404
     assert response.json() == {"detail": "Not Found"}
