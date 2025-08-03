@@ -131,7 +131,7 @@ update-python:
 	@echo "Removing old virtual environment (if exists)..."
 	@rm -rf $(VENV_DIR)
 	@echo "Creating new virtual environment..."
-	@python3.1 -m venv $(VENV_DIR)
+	@python3.12 -m venv $(VENV_DIR)
 
 # Build and compile RepoMix file for AI Analysis
 repomix:
