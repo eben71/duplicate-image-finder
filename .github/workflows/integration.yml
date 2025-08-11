@@ -54,10 +54,10 @@ jobs:
       INGESTION_START_PAGE: 1
       INGESTION_END_PAGE: 100
       # Only add these if your integration tests truly need Google:
-      # GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-      # GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-      # GOOGLE_REDIRECT_URI: http://localhost:8000/api/auth/callback
-      ENCRYPTION_KEY: dummy-32-byte-key-for-tests-only
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }} # pragma: allowlist secret
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }} # pragma: allowlist secret
+      GOOGLE_REDIRECT_URI: http://localhost:8000/api/auth/callback
+      ENCRYPTION_KEY: dummy-32-byte-key-for-tests-only  # pragma: allowlist secret
 
     steps:
     - name: Checkout
