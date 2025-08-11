@@ -1,0 +1,5 @@
+# Critical surfaces require your review
+
+/backend/services/google/_ @eben71
+/backend/models/_ @eben71
+/core/logging_config.py @eben71
