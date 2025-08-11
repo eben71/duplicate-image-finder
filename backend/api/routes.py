@@ -1,16 +1,18 @@
-import httpx
-from fastapi import Request, Depends, HTTPException, APIRouter, Query
-from starlette.responses import RedirectResponse
-from sqlmodel import Session, select
-from backend.models.enums import IngestionMode
-from backend.config.settings import settings
-from core.google_oauth import get_google_auth_url, exchange_code_for_token
-from backend.db.session import get_session
-from backend.models.user import User
-from backend.models.schemas.user import UserRead
-from backend.services.ingestion.google_photos import fetch_images_by_year
-from typing import Any
 import logging
+from typing import Annotated, Any
+
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlmodel import Session, select
+from starlette.responses import RedirectResponse
+
+from backend.config.settings import settings
+from backend.db.session import get_session
+from backend.models.enums import IngestionMode
+from backend.models.schemas.user import UserRead
+from backend.models.user import User
+from backend.services.ingestion.google_photos import fetch_images_by_year
+from core.google_oauth import exchange_code_for_token, get_google_auth_url
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -36,7 +38,8 @@ def google_login() -> RedirectResponse:
 
 @api_router.get("/auth/callback", response_model=UserRead)
 async def google_callback(
-    request: Request, session: Session = Depends(get_session)
+    request: Request,
+    session: Annotated[Session, Depends(get_session)],
 ) -> UserRead:
     logger.debug("Entered google_callback")
     code = request.query_params.get("code")
@@ -66,11 +69,12 @@ async def google_callback(
             logger.debug(f"Profile: {profile}")
 
     except ValueError as e:
-        logger.debug(f"ValueError: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.debug("ValueError in google_callback: %s", str(e))
+        # B904: preserve original cause for debugging
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        logger.debug(f"Unexpected error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        logger.debug("Unexpected error in google_callback: %s", str(e))
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}") from e
 
     email = profile["email"]
     full_name = profile.get("full_name", "")
@@ -106,7 +110,8 @@ async def google_callback(
 # --- Ingestion Routes ---
 @api_router.post("/ingest", response_model=dict[str, Any])
 def ingest_images(
-    user_id: int, mode: IngestionMode = Query(default=IngestionMode.SCRAPE)
+    user_id: int,
+    mode: Annotated[IngestionMode, Query()] = IngestionMode.SCRAPE,
 ) -> dict[str, Any]:
     if mode == IngestionMode.SCRAPE:
         return {"status": "scraped images"}
@@ -119,7 +124,7 @@ def ingest_images(
 @api_router.get("/ingest/dev", tags=["Ingestion"], response_model=dict[str, Any])
 async def ingest_photos_for_dev(
     user_id: int,
-    session: Session = Depends(get_session),
+    session: Annotated[Session, Depends(get_session)],
 ) -> dict[str, Any]:
     user = session.get(User, user_id)
     if not user:

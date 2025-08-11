@@ -1,6 +1,8 @@
-from sqlmodel import create_engine, Session
+from collections.abc import Generator
+
+from sqlmodel import Session, create_engine
+
 from backend.config.settings import settings
-from typing import Generator
 
 engine = create_engine(settings.DATABASE_URL, echo=True)
 

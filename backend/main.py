@@ -1,9 +1,11 @@
+from typing import Any
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from backend.api.routes import api_router
 from backend.config.settings import settings
-from fastapi.middleware.cors import CORSMiddleware
 from core.logging_config import configure_logging
-from typing import Any
 
 app = FastAPI(title="Duplicate Image Finder")
 app.include_router(api_router, prefix="/api")

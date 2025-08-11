@@ -1,5 +1,6 @@
-from backend.services.worker.tasks import generate_embedding
 from typing import Any
+
+from backend.services.worker.tasks import generate_embedding
 
 
 def test_generate_embedding_creates_vector(session: Any) -> None:

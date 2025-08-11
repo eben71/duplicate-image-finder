@@ -1,4 +1,5 @@
 from cryptography.fernet import Fernet
+
 from backend.config.settings import settings
 
 fernet = Fernet(settings.ENCRYPTION_KEY.encode())

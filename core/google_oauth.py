@@ -1,7 +1,9 @@
-import httpx
-from datetime import datetime, timezone
-from sqlmodel import Session
+from datetime import UTC, datetime
 from urllib.parse import urlencode
+
+import httpx
+from sqlmodel import Session
+
 from backend.config.settings import settings
 from backend.models.user import User
 
@@ -43,7 +45,7 @@ def is_token_expired(user: User) -> bool:
     if not user.token_expiry:
         return True
 
-    return user.token_expiry <= datetime.now(timezone.utc)
+    return user.token_expiry <= datetime.now(UTC)
 
 
 async def get_fresh_access_token(user: User, session: Session) -> str:
@@ -61,9 +63,7 @@ async def refresh_access_token(user: User, session: Session) -> None:
     try:
         refresh_token = user.get_google_refresh_token()
         if not refresh_token:
-            raise ValueError(
-                "User does not have a refresh token. They must re-authenticate."
-            )
+            raise ValueError("User does not have a refresh token. They must re-authenticate.")
 
         data = {
             "client_id": settings.GOOGLE_CLIENT_ID,
@@ -90,6 +90,4 @@ async def refresh_access_token(user: User, session: Session) -> None:
         user.requires_reauth = True
         session.add(user)
         session.commit()
-        raise Exception(
-            "Google token refresh failed. User must re-authenticate."
-        ) from e
+        raise Exception("Google token refresh failed. User must re-authenticate.") from e

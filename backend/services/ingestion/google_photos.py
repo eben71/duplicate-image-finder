@@ -1,7 +1,8 @@
-import httpx
 from datetime import datetime
+
+import httpx
 from sqlmodel import Session
-from typing import List, Dict, Optional
+
 from backend.config.settings import settings
 from backend.models.user import User
 from core.google_oauth import get_fresh_access_token
@@ -10,13 +11,13 @@ from core.google_oauth import get_fresh_access_token
 async def fetch_images_by_year(
     user: User,
     session: Session,
-    year: Optional[int] = settings.INGESTION_YEAR,
+    year: int | None = settings.INGESTION_YEAR,
     start_page: int = settings.INGESTION_START_PAGE,
-    end_page: Optional[int] = settings.INGESTION_END_PAGE,
-) -> List[Dict]:
+    end_page: int | None = settings.INGESTION_END_PAGE,
+) -> list[dict]:
     access_token = await get_fresh_access_token(user, session)
     headers = {"Authorization": f"Bearer {access_token}"}
-    images: List[Dict] = []
+    images: list[dict] = []
 
     if not year:
         # Fallback to current year
@@ -27,9 +28,7 @@ async def fetch_images_by_year(
     payload = {
         "pageSize": settings.INGESTION_PAGE_SIZE,
         "filters": {
-            "dateFilter": {
-                "ranges": [{"startDate": {"year": year}, "endDate": {"year": year}}]
-            }
+            "dateFilter": {"ranges": [{"startDate": {"year": year}, "endDate": {"year": year}}]}
         },
     }
 
@@ -43,9 +42,7 @@ async def fetch_images_by_year(
             else:
                 payload.pop("pageToken", None)
 
-            response = await client.post(
-                settings.GOOGLE_SEARCH_URL, headers=headers, json=payload
-            )
+            response = await client.post(settings.GOOGLE_SEARCH_URL, headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()
 

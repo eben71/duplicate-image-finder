@@ -1,16 +1,17 @@
-import pytest
 import tempfile
-from httpx import AsyncClient, ASGITransport
-from sqlmodel import SQLModel, Session, create_engine
-from typing import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Generator
 
-from backend.main import app
-from backend.db.session import get_session
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlmodel import Session, SQLModel, create_engine
+
+import backend.models.embedding
+import backend.models.image
 
 # 🧩 Import all models to ensure they're registered
 import backend.models.user
-import backend.models.image
-import backend.models.embedding
+from backend.db.session import get_session
+from backend.main import app
 
 # make imports for data fixtures "used"
 _ = (backend.models.user, backend.models.image, backend.models.embedding)
@@ -36,8 +37,6 @@ async def client_fixture(session: Session) -> AsyncGenerator[AsyncClient, None]:
         return session
 
     app.dependency_overrides[get_session] = override_get_session
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
     app.dependency_overrides.clear()

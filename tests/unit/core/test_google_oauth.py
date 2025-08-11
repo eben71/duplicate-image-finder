@@ -1,13 +1,15 @@
-import pytest
-import httpx
-from sqlmodel import Session
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
-from tests.utils.factories import make_test_user
+
+import httpx
+import pytest
+from sqlmodel import Session
+
 from core.google_oauth import (
-    refresh_access_token,
     get_fresh_access_token,
+    refresh_access_token,
 )
+from tests.utils.factories import make_test_user
 
 
 @pytest.mark.asyncio
@@ -24,17 +26,13 @@ async def test_refresh_token_success() -> None:
 
     with patch(
         "core.google_oauth.httpx.AsyncClient.post",
-        return_value=AsyncMock(
-            status_code=200, json=AsyncMock(return_value=mock_response)
-        ),
+        return_value=AsyncMock(status_code=200, json=AsyncMock(return_value=mock_response)),
     ):
         await refresh_access_token(user, session)
 
     assert not user.requires_reauth
     assert user.get_google_access_token() == "new_access_token"
-    assert user.token_expiry is not None and user.token_expiry > datetime.now(
-        timezone.utc
-    )
+    assert user.token_expiry is not None and user.token_expiry > datetime.now(UTC)
 
 
 @pytest.mark.asyncio
