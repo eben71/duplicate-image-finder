@@ -70,7 +70,6 @@ async def google_callback(
 
     except ValueError as e:
         logger.debug("ValueError in google_callback: %s", str(e))
-        # B904: preserve original cause for debugging
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.debug("Unexpected error in google_callback: %s", str(e))
