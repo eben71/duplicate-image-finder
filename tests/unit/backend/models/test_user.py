@@ -8,7 +8,6 @@ from core.google_oauth import is_token_expired
 from tests.utils.factories import make_test_user
 
 
-@pytest.mark.unit
 def test_create_user() -> None:
     user = make_test_user(
         email="test@example.com", full_name="Test", ingestion_mode=IngestionMode.SCRAPE
@@ -18,7 +17,6 @@ def test_create_user() -> None:
     assert user.ingestion_mode == IngestionMode.SCRAPE
 
 
-@pytest.mark.unit
 def test_create_user_from_google_login() -> None:
     user = make_test_user(
         email="test@example.com",

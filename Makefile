@@ -8,7 +8,7 @@ VENV_DIR = .venv
 PYTHON_VERSION_CHECK = python3.12 --version
 PIP = $(VENV_DIR)/bin/pip
 PYTHON = $(VENV_DIR)/bin/python3.12
-BREW = brew  
+BREW = brew
 
 .PHONY: build up down restart logs health shell tests reset-db init-db alembic migrate celery install-deps install-dev-deps check-versions format ci update-python repomix
 
@@ -77,9 +77,20 @@ shell:
 # SDLC: Development (test background tasks), Testing (task integration), Deployment (run workers)
 celery:
 	docker compose exec worker celery -A backend.services.worker.celery_app worker --loglevel=info
-	
+
 # Run tests in container with coverage
 # SDLC: Development (verify code), Testing (unit/integration tests), Deployment (CI pipeline)
+test-unit:
+	pytest
+
+# integration tests against compose (reuse your existing recipe)
+test-int: tests
+
+# optional “all”
+test-all:
+	pytest -m "not integration and not e2e"
+	pytest -m integration
+
 tests:
 	docker compose up -d db
 	docker compose exec db sh -c "while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done"

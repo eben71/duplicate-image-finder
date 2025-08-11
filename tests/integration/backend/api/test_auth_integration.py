@@ -19,6 +19,7 @@ USERINFO_RESPONSE = {
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 @patch("backend.api.routes.exchange_code_for_token", new_callable=AsyncMock)
 @patch("httpx.AsyncClient.post", new_callable=AsyncMock)
 async def test_auth_callback_creates_user(
@@ -67,6 +68,7 @@ async def test_auth_callback_creates_user(
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 @patch("backend.api.routes.exchange_code_for_token", new_callable=AsyncMock)
 async def test_auth_callback_handles_invalid_code(
     mock_exchange: AsyncMock, client: AsyncClient

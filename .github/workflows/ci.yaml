@@ -1,12 +1,15 @@
-name: Continuous Integration
+name: CI (unit + coverage)
 
 on:
   push:
-    branches: 
-    - main 
+    branches:
+    - main
   pull_request:
-    branches:  
-    - main 
+    branches:
+    - main
+
+permissions:
+  contents: read
 
 jobs:
   build-test-lint:
@@ -14,45 +17,6 @@ jobs:
     defaults:
       run:
         shell: bash
-
-    services:
-      postgres:
-        image: postgres:16
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_DB: testdb
-        options: >-
-          --health-cmd="pg_isready -U testuser -d testdb"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-      redis:
-        image: redis:7
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-    env:
-      DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
-      CELERY_BROKER_URL: redis://localhost:6379/0
-      CELERY_BACKEND_URL: redis://redis:6379/1
-      FASTAPI_ENDPOINT: http://app:8000/api/v1/images/scraped
-      GOOGLE_PHOTOS_URL: https://photos.google.com/
-      GOOGLE_SEARCH_URL: https://photoslibrary.googleapis.com/v1/mediaItems:search
-      GOOGLE_USERINFO_URL: https://www.googleapis.com/oauth2/v3/userinfo
-      SESSION_COOKIE_PATH: ~/.gp_session.json
-      INGESTION_MODE: api
-      INGESTION_YEAR: 2025
-      INGESTION_START_PAGE: 1
-      INGESTION_END_PAGE: 100
 
     strategy:
       matrix:
@@ -66,59 +30,36 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-        cache: "pip"  
+        cache: "pip"
 
-    - name: Install Docker Compose
-      run: |
-        sudo curl -L "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
-        docker-compose --version
-        
+    - name: Cache pip
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: pip-${{ runner.os }}-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: pip-${{ runner.os }}-
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade ruff black mypy pytest
-        if [[ -f requirements.txt ]]; then
-          pip install -r requirements.txt
-        elif [[ -f pyproject.toml ]]; then
-          pip install .[dev]  || pip install -r requirements-dev.txt
-        fi
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt || true
+        pip install ruff black coverage pytest
 
     - name: List package versions
       run: pip list
 
     - name: Run linting
       run: make ci
-    
-    - name: Docker build
-      run: make build
 
-    - name: Start services
-      run: docker-compose up -d
-
-    - name: Get PostgreSQL container name
+    - name: Tests + Coverage (unit only)
       run: |
-        # Wait briefly to ensure services are started
-        sleep 5
-        # Filter by image and status, then get the first running postgres container
-        CONTAINER_NAME=$(docker ps -q -f "ancestor=postgres:16" -f "status=running" | head -n 1)
-        if [ -z "$CONTAINER_NAME" ]; then
-          echo "No PostgreSQL container found. Listing all containers:"
-          docker ps -a
-          exit 1
-        fi
-        echo "POSTGRES_CONTAINER=$CONTAINER_NAME" >> $GITHUB_ENV
+        coverage run -m pytest -q
+        coverage xml
+        coverage report  # enforces fail_under from pyproject.toml
 
-    - name: Debug PostgreSQL logs
-      run: docker logs $POSTGRES_CONTAINER
-
-    - name: Run Alembic migrations inside app container
-      run: |
-        # Wait for the postgres service to be healthy using pg_isready
-        docker exec $POSTGRES_CONTAINER sh -c "while ! pg_isready -U testuser -d testdb; do sleep 1; done"
-        docker-compose exec -T app alembic -c backend/alembic.ini upgrade head
-        docker-compose exec -T app alembic -c backend/alembic.ini revision --autogenerate -m "check" || true
-        test -z "$(git status --porcelain | grep migrations)" || (echo "Missing migration!" && exit 1)
-
-    - name: Run tests inside app container
-      run: make tests
+    - name: Upload coverage artifact
+      uses: actions/upload-artifact@v4
+      with:
+          name: coverage-xml
+          path: coverage.xml

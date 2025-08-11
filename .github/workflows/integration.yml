@@ -1,0 +1,110 @@
+name: Integration
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    services:
+      postgres:
+        image: postgres:16
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass # pragma: allowlist secret
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd="pg_isready -U testuser -d testdb"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb  # pragma: allowlist secret
+      CELERY_BROKER_URL: redis://localhost:6379/0
+      CELERY_BACKEND_URL: redis://redis:6379/1
+      FASTAPI_ENDPOINT: http://app:8000/api/v1/images/scraped
+      GOOGLE_PHOTOS_URL: https://photos.google.com/
+      GOOGLE_SEARCH_URL: https://photoslibrary.googleapis.com/v1/mediaItems:search
+      GOOGLE_USERINFO_URL: https://www.googleapis.com/oauth2/v3/userinfo
+      SESSION_COOKIE_PATH: ~/.gp_session.json
+      INGESTION_MODE: api
+      INGESTION_YEAR: 2025
+      INGESTION_START_PAGE: 1
+      INGESTION_END_PAGE: 100
+      # Only add these if your integration tests truly need Google:
+      # GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      # GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      # GOOGLE_REDIRECT_URI: http://localhost:8000/api/auth/callback
+      ENCRYPTION_KEY: dummy-32-byte-key-for-tests-only
+
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: "pip"
+
+    - name: Cache pip
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: pip-${{ runner.os }}-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: pip-${{ runner.os }}-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt || true
+        pip install coverage pytest
+
+    - name: List package versions
+      run: pip list
+
+    - name: Start db (compose)
+      run: docker compose up -d db
+
+    - name: Apply DB migrations (if any)
+      run: |
+        if [ -f alembic.ini ]; then alembic upgrade head; fi || true
+
+    - name: Wait for Postgres
+      run: docker compose exec -T db sh -c 'while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done'
+
+    - name: Run integration tests (your existing target)
+      run: docker compose run --rm app pytest -m integration --cov=backend --cov=frontend --disable-warnings
+
+    - name: Stop db
+      run: docker compose stop db

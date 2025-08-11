@@ -4,7 +4,7 @@ from httpx import AsyncClient
 BASE = "/api"
 
 
-@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_ingest_endpoint(client: AsyncClient) -> None:
     response = await client.post(f"{BASE}/ingest?user_id=1")
     assert response.status_code == 200
