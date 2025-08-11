@@ -69,10 +69,10 @@ async def google_callback(
             logger.debug(f"Profile: {profile}")
 
     except ValueError as e:
-        logger.debug("ValueError in google_callback: %s", str(e))
+        logger.debug(f"ValueError in google_callback: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        logger.debug("Unexpected error in google_callback: %s", str(e))
+        logger.debug(f"Unexpected error in google_callback: {e}")
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}") from e
 
     email = profile["email"]

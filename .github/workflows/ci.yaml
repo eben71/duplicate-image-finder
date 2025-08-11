@@ -35,7 +35,7 @@ jobs:
       GOOGLE_CLIENT_ID: dummy-client-id # pragma: allowlist secret
       GOOGLE_CLIENT_SECRET: dummy-client-secret # pragma: allowlist secret
       GOOGLE_REDIRECT_URI: http://localhost:8000/api/auth/callback
-      ENCRYPTION_KEY: dummy-32-byte-key-for-tests-only
+      ENCRYPTION_KEY: dummy-32-byte-key-for-tests-only  # pragma: allowlist secret
 
     steps:
     - name: Checkout

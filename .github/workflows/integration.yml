@@ -57,7 +57,7 @@ jobs:
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }} # pragma: allowlist secret
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }} # pragma: allowlist secret
       GOOGLE_REDIRECT_URI: http://localhost:8000/api/auth/callback
-      ENCRYPTION_KEY: dummy-32-byte-key-for-tests-only  # pragma: allowlist secret
+      ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}  # pragma: allowlist secret
 
     steps:
     - name: Checkout

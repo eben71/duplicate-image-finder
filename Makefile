@@ -80,14 +80,14 @@ celery:
 
 # Run tests in container with coverage
 # SDLC: Development (verify code), Testing (unit/integration tests), Deployment (CI pipeline)
-test-unit:
+tests-unit:
 	pytest
 
 # integration tests against compose (reuse your existing recipe)
-test-int: tests
+tests-int: tests
 
 # optional “all”
-test-all:
+tests-all:
 	pytest -m "not integration and not e2e"
 	pytest -m integration
 
