@@ -4,9 +4,6 @@ on:
   push:
     branches:
     - main
-  pull_request:
-    branches:
-    - main
 
 permissions:
   contents: read
@@ -62,19 +59,13 @@ jobs:
       # GOOGLE_REDIRECT_URI: http://localhost:8000/api/auth/callback
       ENCRYPTION_KEY: dummy-32-byte-key-for-tests-only
 
-    strategy:
-      matrix:
-        python-version: ["3.12"]
-
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python
       uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: "pip"
+      with: { python-version: '3.12' }
 
     - name: Cache pip
       uses: actions/cache@v4
