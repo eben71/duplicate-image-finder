@@ -10,7 +10,7 @@ PIP = $(VENV_DIR)/bin/pip
 PYTHON = $(VENV_DIR)/bin/python3.12
 BREW = brew
 
-.PHONY: build up down restart logs health shell tests reset-db init-db alembic migrate celery install-deps install-dev-deps check-versions format ci update-python repomix
+.PHONY: build up down restart logs health shell reset-db init-db alembic migrate celery install-deps install-dev-deps check-versions format ci update-python repomix tests-unit tests-int tests-debug tests-all tests
 
 # --- Docker: App Lifecycle ---
 # Build Docker images
@@ -78,22 +78,26 @@ shell:
 celery:
 	docker compose exec worker celery -A backend.services.worker.celery_app worker --loglevel=info
 
-# Run tests in container with coverage
-# SDLC: Development (verify code), Testing (unit/integration tests), Deployment (CI pipeline)
+# Fast unit tests only (default marker filter from pytest.ini applies)
 tests-unit:
 	pytest
 
-# integration tests against compose (reuse your existing recipe)
+# Integration tests via your existing compose recipe
 tests-int: tests
 
-# optional “all”
+# Debug-only tests (override default filter)
+tests-debug:
+	pytest -m debug -s -vv
+
+# Run unit (non-integration, non-e2e, non-debug) then integration
 tests-all:
-	pytest -m "not integration and not e2e"
+	pytest -m "not integration and not e2e and not debug"
 	pytest -m integration
 
+# Your existing integration recipe (kept intact)
 tests:
 	docker compose up -d db
-	docker compose exec db sh -c "while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done"
+	docker compose exec -T db sh -c "while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done"
 	docker compose run --rm app pytest tests --cov=backend --cov=frontend --disable-warnings
 	docker compose stop db
 

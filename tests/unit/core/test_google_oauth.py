@@ -1,37 +1,41 @@
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-import httpx
 import pytest
+from httpx import Request, Response
 from sqlmodel import Session
 
-from core.google_oauth import (
-    get_fresh_access_token,
-    refresh_access_token,
-)
+import core.google_oauth as oauth
 from tests.utils.factories import make_test_user
 
 
 @pytest.mark.asyncio
-async def test_refresh_token_success() -> None:
+async def test_refresh_token_success(monkeypatch: pytest.MonkeyPatch, session: Session) -> None:
     user = make_test_user()
     user.set_google_tokens("expired_token", "valid_refresh_token", expires_in=-10)
 
     session = AsyncMock(spec=Session)
-    mock_response = {
-        "access_token": "new_access_token",
-        "expires_in": 3600,
-    }
 
-    with patch(
-        "core.google_oauth.httpx.AsyncClient.post",
-        return_value=AsyncMock(status_code=200, json=AsyncMock(return_value=mock_response)),
-    ):
-        await refresh_access_token(user, session)
+    # Mock httpx.Response
+    mock_response = Mock(spec=Response)
+    mock_response.status_code = 200
+    mock_response.raise_for_status = Mock()  # <-- sync, not async
+    mock_response.json = Mock(
+        return_value={"access_token": "tok", "expires_in": 3600, "refresh_token": "r1"}
+    )
 
-    assert not user.requires_reauth
-    assert user.get_google_access_token() == "new_access_token"
-    assert user.token_expiry is not None and user.token_expiry > datetime.now(UTC)
+    # Mock httpx.AsyncClient
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=mock_response)
+
+    # Patch the module-level client
+    monkeypatch.setattr(oauth, "async_client", mock_client, raising=True)
+
+    await oauth.refresh_access_token(user, session)
+
+    assert user.get_google_access_token() == "tok"
+    assert user.get_google_refresh_token() == "r1"
+    assert user.token_expiry is not None
+    mock_response.raise_for_status.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -41,7 +45,7 @@ async def test_refresh_token_missing() -> None:
     session = AsyncMock(spec=Session)
 
     with pytest.raises(Exception) as exc:
-        await refresh_access_token(user, session)
+        await oauth.refresh_access_token(user, session)
 
     assert "re-authenticate" in str(exc.value)
     assert user.requires_reauth is True
@@ -56,15 +60,15 @@ async def test_refresh_token_rejected_by_google() -> None:
 
     # Simulate HTTP 400 error from Google
     error_content = b'{"error": "invalid_grant", "error_description": "Bad token"}'
-    response = httpx.Response(
+    response = Response(
         status_code=400,
         content=error_content,
-        request=httpx.Request("POST", "https://oauth2.googleapis.com/token"),
+        request=Request("POST", "https://oauth2.googleapis.com/token"),
     )
 
     with patch("core.google_oauth.httpx.AsyncClient.post", return_value=response):
         with pytest.raises(Exception) as exc:
-            await refresh_access_token(user, session)
+            await oauth.refresh_access_token(user, session)
 
     assert "re-authenticate" in str(exc.value)
     assert user.requires_reauth is True
@@ -78,6 +82,6 @@ async def test_get_fresh_access_token_triggers_refresh() -> None:
     session = AsyncMock(spec=Session)
 
     with patch("core.google_oauth.refresh_access_token", new=AsyncMock()):
-        token = await get_fresh_access_token(user, session)
+        token = await oauth.get_fresh_access_token(user, session)
 
     assert isinstance(token, str)

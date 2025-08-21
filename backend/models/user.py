@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from pydantic import EmailStr, validator
+from pydantic import EmailStr, field_validator
 from sqlalchemy import Column, DateTime
 from sqlalchemy import Enum as SAEnum
 from sqlmodel import Field, SQLModel
@@ -43,7 +43,7 @@ class User(SQLModel, table=True):  # type: ignore
 
     deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True)))
 
-    @validator("token_expiry", "created_at", "updated_at", "deleted_at")
+    @field_validator("token_expiry", "created_at", "updated_at", "deleted_at", mode="before")
     def ensure_utc(cls, v: datetime | None) -> datetime | None:
         if v is not None and v.tzinfo != UTC:
             raise ValueError("Datetime must be in UTC")

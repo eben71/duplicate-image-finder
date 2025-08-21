@@ -72,15 +72,21 @@ def session(engine: Engine) -> Generator[Session, None, None]:
 
 
 @pytest.fixture(name="client")
-async def client_fixture(session: Session) -> AsyncGenerator[AsyncClient, None]:
-    """HTTP client with app dependency overridden to use the test session."""
+async def async_client_fixture(session: Session) -> AsyncGenerator[AsyncClient, None]:
+    """
+    Async HTTP client bound to the FastAPI app, with the DB dependency
+    overridden to use the per-test SQLModel Session.
+    """
 
     def override_get_session() -> Session:
         return session
 
     app.dependency_overrides[get_session] = override_get_session
     try:
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
             yield client
     finally:
         app.dependency_overrides.clear()

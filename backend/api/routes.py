@@ -110,8 +110,16 @@ async def google_callback(
 @api_router.post("/ingest", response_model=dict[str, Any])
 def ingest_images(
     user_id: int,
+    session: Annotated[Session, Depends(get_session)],
     mode: Annotated[IngestionMode, Query()] = IngestionMode.SCRAPE,
 ) -> dict[str, Any]:
+    if user_id <= 0:
+        raise HTTPException(status_code=400, detail="user_id must be a positive integer")
+
+    user = session.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
     if mode == IngestionMode.SCRAPE:
         return {"status": "scraped images"}
     elif mode == IngestionMode.API:
