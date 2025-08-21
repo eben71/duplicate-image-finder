@@ -65,6 +65,13 @@ jobs:
     - name: Run linting
       run: make ci
 
+    - name: Generate ENCRYPTION_KEY for unit tests
+      run: |
+        python - <<'PY' >> $GITHUB_ENV
+          from cryptography.fernet import Fernet
+          print("ENCRYPTION_KEY=" + Fernet.generate_key().decode())
+        PY
+
     - name: Tests + Coverage (unit only)
       run: |
         coverage run -m pytest -q
