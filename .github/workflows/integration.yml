@@ -2,8 +2,7 @@ name: 🐘 Integration tests (DB, Celery, Redis)
 
 on:
   push:
-    branches:
-    - main
+    branches: [ main ]
 
 permissions:
   contents: read
