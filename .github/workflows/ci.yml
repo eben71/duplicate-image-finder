@@ -19,6 +19,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
     - uses: ./.github/actions/python-setup
       with:
         python-version: "3.12"
@@ -35,6 +38,9 @@ jobs:
     needs: [lint]
 
     steps:
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
     - uses: ./.github/actions/python-setup
       with:
         python-version: "3.12"
