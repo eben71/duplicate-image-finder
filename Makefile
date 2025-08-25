@@ -118,8 +118,6 @@ ci:
 	$(ACTIVATE); ruff format --check .
 	$(ACTIVATE); black --check .
 	$(ACTIVATE); mypy .
-
-# --
 # --	coverage run -m pytest -q
 # --	coverage xml
 # --	coverage report

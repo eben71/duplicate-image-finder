@@ -2,7 +2,6 @@ name: CI
 
 on:
   pull_request:
-  push:
     branches: [ main ]
 
 # Cancel superseded runs on the same ref
@@ -76,10 +75,12 @@ jobs:
     - name: Run unit tests + lint/mypy (Makefile)
       run: make ci
 
+    - name: Coverage summary (stdout)
+      run: coverage report -m || true
+
     - name: Upload coverage.xml
-      if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: coverage-xml
+        name: coverage-report
         path: coverage.xml
         if-no-files-found: ignore

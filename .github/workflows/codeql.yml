@@ -1,4 +1,6 @@
+# .github/workflows/codeql.yml
 name: CodeQL
+
 on:
   pull_request:
   push:
@@ -12,9 +14,37 @@ jobs:
   analyze:
     name: 🔒 CodeQL
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
+
+      # Cache the CodeQL bundle to avoid network flakes on every run
+      - name: Cache CodeQL bundle
+        id: cache-codeql
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/codeql-bundle
+          key: codeql-bundle-v2.22.4
+
+      - name: Download CodeQL bundle (with retry) if cache miss
+      # Only runs when the cache didn't hit
+        if: steps.cache-codeql.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p ~/.cache/codeql-bundle
+          url="https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.22.4/codeql-bundle-linux64.tar.zst"
+          # curl retry: 5 attempts, backoff 3s
+          curl -fL --retry 5 --retry-delay 3 -o ~/.cache/codeql-bundle/codeql-bundle.tar.zst "$url"
+          # extract (ubuntu-latest has zstd support in tar)
+          tar --zstd -xf ~/.cache/codeql-bundle/codeql-bundle.tar.zst -C ~/.cache/codeql-bundle
+          # After extract, the codeql CLI is at ~/.cache/codeql-bundle/codeql/codeql
+
+      - name: Initialize CodeQL (use cached tools)
+        uses: github/codeql-action/init@v3
         with:
           languages: python
-      - uses: github/codeql-action/analyze@v3
+          tools: ~/.cache/codeql-bundle/codeql
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
