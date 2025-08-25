@@ -6,12 +6,6 @@ from tests.utils.factories import make_test_user
 
 
 @pytest.mark.asyncio
-async def test_health(client: AsyncClient) -> None:
-    r = await client.get("/api/health")
-    assert r.status_code == 200
-
-
-@pytest.mark.asyncio
 async def test_ingest_endpoint_with_valid_user(client: AsyncClient, session: Session) -> None:
     # Arrange: create a user the route can find
     u = make_test_user()

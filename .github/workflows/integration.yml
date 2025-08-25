@@ -1,14 +1,65 @@
-name: 🐘 Integration tests (DB, Celery, Redis)
+name: 🐘 Integration tests
 
 on:
+  pull_request:
   push:
     branches: [ main ]
+
+concurrency:
+  group: integ-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  build-test-lint:
+  # --- Smoke on PRs ---
+  smoke:
+    if: github.event_name == 'pull_request'
+    name: 🐘 Integration tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/python-setup
+        with:
+          python-version: "3.12"
+
+      - name: Install app deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Start services (app + db)
+        run: docker compose up -d app db
+
+      - name: Wait for app health
+        run: |
+          for i in {1..30}; do
+            if curl -sSf http://localhost:8000/api/health > /dev/null; then
+              echo "App is healthy!"
+              exit 0
+            fi
+            echo "Waiting for app..."
+            sleep 2
+          done
+          echo "App did not become healthy in time" >&2
+          exit 1
+
+      - name: Stop services
+        if: always()
+        run: docker compose down -v
+
+  # --- Full integration on push to main ---
+  full:
+    if: github.event_name == 'push'
+    name: 🐘 Integration tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -52,40 +103,39 @@ jobs:
       INGESTION_YEAR: 2025
       INGESTION_START_PAGE: 1
       INGESTION_END_PAGE: 100
-      # Only add these if your integration tests truly need Google:
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }} # pragma: allowlist secret
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }} # pragma: allowlist secret
       GOOGLE_REDIRECT_URI: http://localhost:8000/api/auth/callback
       ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}  # pragma: allowlist secret
 
     steps:
-    - name: Check out repository code
-      uses: actions/checkout@v4
+      - name: Check out repository code
+        uses: actions/checkout@v4
 
-    - uses: ./.github/actions/python-setup
-      with:
-        python-version: "3.12"
+      - uses: ./.github/actions/python-setup
+        with:
+          python-version: "3.12"
 
-    - name: Install other dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install other dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: List package versions
-      run: pip list
+      - name: List package versions
+        run: pip list
 
-    - name: Start db (compose)
-      run: docker compose up -d db
+      - name: Start db (compose)
+        run: docker compose up -d db
 
-    - name: Apply DB migrations (if any)
-      run: |
-        if [ -f alembic.ini ]; then alembic upgrade head; fi || true
+      - name: Apply DB migrations (if any)
+        run: |
+          if [ -f alembic.ini ]; then alembic upgrade head; fi || true
 
-    - name: Wait for Postgres
-      run: docker compose exec -T db sh -c 'while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done'
+      - name: Wait for Postgres
+        run: docker compose exec -T db sh -c 'while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done'
 
-    - name: Run integration tests (your existing target)
-      run: docker compose run --rm app pytest -m integration --cov=backend --cov=frontend --disable-warnings
+      - name: Run integration tests (pytest suite)
+        run: docker compose run --rm app pytest -m integration --cov=backend --cov=frontend --disable-warnings
 
-    - name: Stop db
-      run: docker compose stop db
+      - name: Stop db
+        run: docker compose stop db

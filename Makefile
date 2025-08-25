@@ -72,6 +72,10 @@ tests-int: tests
 tests-debug:
 	$(ACTIVATE); pytest -m debug -s -vv
 
+# Smoke-only tests (override default filter)
+tests-smoke:
+	$(ACTIVATE); pytest -m smoke -s -vv
+
 # Run unit (non-integration/e2e/debug) then integration
 tests-all:
 	$(ACTIVATE); pytest -m "not integration and not e2e and not debug"
