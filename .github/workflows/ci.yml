@@ -39,6 +39,25 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint]
 
+    env:
+      DATABASE_URL: dummy-connection-string  # pragma: allowlist secret
+      CELERY_BROKER_URL: redis://localhost:6379/0
+      CELERY_BACKEND_URL: redis://redis:6379/1
+      FASTAPI_ENDPOINT: http://app:8000/api/v1/images/scraped
+      GOOGLE_PHOTOS_URL: https://photos.google.com/
+      GOOGLE_SEARCH_URL: https://photoslibrary.googleapis.com/v1/mediaItems:search
+      GOOGLE_USERINFO_URL: https://www.googleapis.com/oauth2/v3/userinfo
+      SESSION_COOKIE_PATH: ~/.gp_session.json
+      INGESTION_MODE: api
+      INGESTION_YEAR: 2025
+      INGESTION_START_PAGE: 1
+      INGESTION_END_PAGE: 100
+      # Only add these if your integration tests truly need Google:
+      GOOGLE_CLIENT_ID: dummy-client-id # pragma: allowlist secret
+      GOOGLE_CLIENT_SECRET: dummy-client-secret # pragma: allowlist secret
+      GOOGLE_REDIRECT_URI: http://localhost:8000/api/auth/callback
+      ENCRYPTION_KEY: dummy-32-byte-key-for-tests-only  # pragma: allowlist secret
+
     steps:
     - name: Check out repository code
       uses: actions/checkout@v4
