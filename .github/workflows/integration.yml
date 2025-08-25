@@ -36,9 +36,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Start services (app + db)
-        run: docker compose up -d app db
-
       - name: Wait for app health
         run: |
           for i in {1..30}; do
@@ -51,10 +48,6 @@ jobs:
           done
           echo "App did not become healthy in time" >&2
           exit 1
-
-      - name: Stop services
-        if: always()
-        run: docker compose down -v
 
   # --- Full integration on push to main ---
   full:
