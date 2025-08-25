@@ -1,4 +1,4 @@
-name: CI
+name: Pre-Commit and Unit tests
 
 on:
   pull_request:

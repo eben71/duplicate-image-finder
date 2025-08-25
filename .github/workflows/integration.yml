@@ -17,7 +17,7 @@ defaults:
     shell: bash
 
 jobs:
-  # --- Smoke on PRs ---
+  # --- Smoke Tests on PRs ---
   smoke:
     if: github.event_name == 'pull_request'
     name: 🐘 Integration tests
