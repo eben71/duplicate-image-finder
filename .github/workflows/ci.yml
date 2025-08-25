@@ -40,7 +40,7 @@ jobs:
     needs: [lint]
 
     env:
-      DATABASE_URL: dummy-connection-string  # pragma: allowlist secret
+      DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb   # pragma: allowlist secret
       CELERY_BROKER_URL: redis://localhost:6379/0
       CELERY_BACKEND_URL: redis://redis:6379/1
       FASTAPI_ENDPOINT: http://app:8000/api/v1/images/scraped
