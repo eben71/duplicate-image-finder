@@ -30,7 +30,9 @@ jobs:
       run: pip list
 
     - name: Run pre-commit
-      run: pre-commit run --all-files --show-diff-on-failure
+      run: |
+        pip install pre-commit detect-secrets
+        pre-commit run --all-files --show-diff-on-failure
 
   unit-tests:
     name: 🧪 Unit tests + coverage
