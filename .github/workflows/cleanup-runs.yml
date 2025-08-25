@@ -16,4 +16,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh run list -b main --json databaseId -q '.[].databaseId' | xargs -I {} gh api -X DELETE "repos/${{ github.repository }}/actions/runs/{}"
+        gh run list --limit 500 --json branch,databaseId -q '.[] | select(.branch != "main") | .databaseId' | xargs -I {} gh api -X DELETE "repos/${{ github.repository }}/actions/runs/{}"
