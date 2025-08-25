@@ -16,6 +16,24 @@ defaults:
   run:
     shell: bash
 
+env:
+  DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb  # pragma: allowlist secret
+  CELERY_BROKER_URL: redis://localhost:6379/0
+  CELERY_BACKEND_URL: redis://redis:6379/1
+  FASTAPI_ENDPOINT: http://app:8000/api/v1/images/scraped
+  GOOGLE_PHOTOS_URL: https://photos.google.com/
+  GOOGLE_SEARCH_URL: https://photoslibrary.googleapis.com/v1/mediaItems:search
+  GOOGLE_USERINFO_URL: https://www.googleapis.com/oauth2/v3/userinfo
+  SESSION_COOKIE_PATH: ~/.gp_session.json
+  INGESTION_MODE: api
+  INGESTION_YEAR: 2025
+  INGESTION_START_PAGE: 1
+  INGESTION_END_PAGE: 100
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }} # pragma: allowlist secret
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }} # pragma: allowlist secret
+  GOOGLE_REDIRECT_URI: http://localhost:8000/api/auth/callback
+  ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}  # pragma: allowlist secret
+
 jobs:
   # --- Smoke Tests on PRs ---
   smoke:
@@ -36,18 +54,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Wait for app health
+      - name: Start services (app + db)
+        run: docker compose up -d app db
+
+      - name: Wait for port 8000
         run: |
-          for i in {1..30}; do
-            if curl -sSf http://localhost:8000/api/health > /dev/null; then
-              echo "App is healthy!"
+          for i in {1..60}; do
+            if nc -z localhost 8000; then
+              echo "Port 8000 is open"
               exit 0
             fi
-            echo "Waiting for app..."
+            echo "Waiting for app to open port 8000..."
             sleep 2
           done
-          echo "App did not become healthy in time" >&2
+          echo "App did not start listening on 8000" >&2
+          docker compose logs app || true
           exit 1
+
+      - name: Health check
+        run: curl -sSf http://localhost:8000/api/health
+
+      - name: Stop services
+        if: always()
+        run: docker compose down -v
 
   # --- Full integration on push to main ---
   full:
@@ -82,24 +111,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-
-    env:
-      DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb  # pragma: allowlist secret
-      CELERY_BROKER_URL: redis://localhost:6379/0
-      CELERY_BACKEND_URL: redis://redis:6379/1
-      FASTAPI_ENDPOINT: http://app:8000/api/v1/images/scraped
-      GOOGLE_PHOTOS_URL: https://photos.google.com/
-      GOOGLE_SEARCH_URL: https://photoslibrary.googleapis.com/v1/mediaItems:search
-      GOOGLE_USERINFO_URL: https://www.googleapis.com/oauth2/v3/userinfo
-      SESSION_COOKIE_PATH: ~/.gp_session.json
-      INGESTION_MODE: api
-      INGESTION_YEAR: 2025
-      INGESTION_START_PAGE: 1
-      INGESTION_END_PAGE: 100
-      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }} # pragma: allowlist secret
-      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }} # pragma: allowlist secret
-      GOOGLE_REDIRECT_URI: http://localhost:8000/api/auth/callback
-      ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}  # pragma: allowlist secret
 
     steps:
       - name: Check out repository code

@@ -31,11 +31,9 @@ _ensure_encryption_key()
 
 # --- Import the app and models AFTER the key is set ---
 # Import models so SQLModel.metadata is populated
-import backend.models.embedding  # noqa: E402,F401
-import backend.models.image  # noqa: E402,F401
-import backend.models.user  # noqa: E402,F401
 from backend.db.session import get_session  # noqa: E402
 from backend.main import app  # noqa: E402
+from backend.models import embedding, image, user  # noqa: E402,F401
 
 
 @pytest.fixture(scope="session")
