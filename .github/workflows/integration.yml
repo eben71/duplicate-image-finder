@@ -54,6 +54,25 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Create .env for Docker Compose
+        run: |
+          echo "DATABASE_URL=${DATABASE_URL}" >> .env
+          echo "CELERY_BROKER_URL=${CELERY_BROKER_URL}" >> .env
+          echo "CELERY_BACKEND_URL=${CELERY_BACKEND_URL}" >> .env
+          echo "FASTAPI_ENDPOINT=${FASTAPI_ENDPOINT}" >> .env
+          echo "GOOGLE_PHOTOS_URL=${GOOGLE_PHOTOS_URL}" >> .env
+          echo "GOOGLE_SEARCH_URL=${GOOGLE_SEARCH_URL}" >> .env
+          echo "GOOGLE_USERINFO_URL=${GOOGLE_USERINFO_URL}" >> .env
+          echo "SESSION_COOKIE_PATH=${SESSION_COOKIE_PATH}" >> .env
+          echo "INGESTION_MODE=${INGESTION_MODE}" >> .env
+          echo "INGESTION_YEAR=${INGESTION_YEAR}" >> .env
+          echo "INGESTION_START_PAGE=${INGESTION_START_PAGE}" >> .env
+          echo "INGESTION_END_PAGE=${INGESTION_END_PAGE}" >> .env
+          echo "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" >> .env
+          echo "GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" >> .env
+          echo "GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}" >> .env
+          echo "ENCRYPTION_KEY=${ENCRYPTION_KEY}" >> .env
+
       - name: Start services (app + db)
         run: docker compose up -d app db
 
@@ -127,6 +146,25 @@ jobs:
 
       - name: List package versions
         run: pip list
+
+      - name: Create .env for Docker Compose
+        run: |
+          echo "DATABASE_URL=${DATABASE_URL}" >> .env
+          echo "CELERY_BROKER_URL=${CELERY_BROKER_URL}" >> .env
+          echo "CELERY_BACKEND_URL=${CELERY_BACKEND_URL}" >> .env
+          echo "FASTAPI_ENDPOINT=${FASTAPI_ENDPOINT}" >> .env
+          echo "GOOGLE_PHOTOS_URL=${GOOGLE_PHOTOS_URL}" >> .env
+          echo "GOOGLE_SEARCH_URL=${GOOGLE_SEARCH_URL}" >> .env
+          echo "GOOGLE_USERINFO_URL=${GOOGLE_USERINFO_URL}" >> .env
+          echo "SESSION_COOKIE_PATH=${SESSION_COOKIE_PATH}" >> .env
+          echo "INGESTION_MODE=${INGESTION_MODE}" >> .env
+          echo "INGESTION_YEAR=${INGESTION_YEAR}" >> .env
+          echo "INGESTION_START_PAGE=${INGESTION_START_PAGE}" >> .env
+          echo "INGESTION_END_PAGE=${INGESTION_END_PAGE}" >> .env
+          echo "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" >> .env
+          echo "GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" >> .env
+          echo "GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}" >> .env
+          echo "ENCRYPTION_KEY=${ENCRYPTION_KEY}" >> .env
 
       - name: Start db (compose)
         run: docker compose up -d db

@@ -1,3 +1,18 @@
+name: 🔒 CodeQL
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: 🔒 CodeQL
@@ -6,6 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # (Optional) Cache the CodeQL bundle to reduce download flakes
       - name: Cache CodeQL bundle
         id: cache-codeql
         uses: actions/cache@v4
