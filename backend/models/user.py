@@ -17,7 +17,7 @@ class User(SQLModel, table=True):  # type: ignore
     }
     id: int | None = Field(default=None, primary_key=True)
     email: EmailStr = Field(index=True, nullable=False, unique=True, max_length=255)
-    full_name: str = Field(max_length=100, regex=r"^[a-zA-Z\s]+$")
+    full_name: str = Field(max_length=100)
     ingestion_mode: IngestionMode = Field(
         default=IngestionMode.API,
         sa_column=Column(SAEnum(IngestionMode, name="ingestionmode")),
