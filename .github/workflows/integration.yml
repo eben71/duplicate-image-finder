@@ -56,42 +56,56 @@ jobs:
 
       - name: Create .env for Docker Compose
         run: |
-          echo "DATABASE_URL=${DATABASE_URL}" >> .env
-          echo "CELERY_BROKER_URL=${CELERY_BROKER_URL}" >> .env
-          echo "CELERY_BACKEND_URL=${CELERY_BACKEND_URL}" >> .env
-          echo "FASTAPI_ENDPOINT=${FASTAPI_ENDPOINT}" >> .env
-          echo "GOOGLE_PHOTOS_URL=${GOOGLE_PHOTOS_URL}" >> .env
-          echo "GOOGLE_SEARCH_URL=${GOOGLE_SEARCH_URL}" >> .env
-          echo "GOOGLE_USERINFO_URL=${GOOGLE_USERINFO_URL}" >> .env
-          echo "SESSION_COOKIE_PATH=${SESSION_COOKIE_PATH}" >> .env
-          echo "INGESTION_MODE=${INGESTION_MODE}" >> .env
-          echo "INGESTION_YEAR=${INGESTION_YEAR}" >> .env
-          echo "INGESTION_START_PAGE=${INGESTION_START_PAGE}" >> .env
-          echo "INGESTION_END_PAGE=${INGESTION_END_PAGE}" >> .env
-          echo "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" >> .env
-          echo "GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" >> .env
-          echo "GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}" >> .env
-          echo "ENCRYPTION_KEY=${ENCRYPTION_KEY}" >> .env
+          {
+            echo "ENCRYPTION_KEY=${ENCRYPTION_KEY:-$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')}"
+            echo "DATABASE_URL=${DATABASE_URL}"
+            echo "CELERY_BROKER_URL=${CELERY_BROKER_URL}"
+            echo "CELERY_BACKEND_URL=${CELERY_BACKEND_URL}"
+            echo "FASTAPI_ENDPOINT=${FASTAPI_ENDPOINT}"
+            echo "GOOGLE_PHOTOS_URL=${GOOGLE_PHOTOS_URL}"
+            echo "GOOGLE_SEARCH_URL=${GOOGLE_SEARCH_URL}"
+            echo "GOOGLE_USERINFO_URL=${GOOGLE_USERINFO_URL}"
+            echo "SESSION_COOKIE_PATH=${SESSION_COOKIE_PATH}"
+            echo "INGESTION_MODE=${INGESTION_MODE}"
+            echo "INGESTION_YEAR=${INGESTION_YEAR}"
+            echo "INGESTION_START_PAGE=${INGESTION_START_PAGE}"
+            echo "INGESTION_END_PAGE=${INGESTION_END_PAGE}"
+            echo "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}"
+            echo "GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}"
+            echo "GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}"
+            echo "ENCRYPTION_KEY=${ENCRYPTION_KEY}"
+          } > .env
 
-      - name: Start services (app + db)
+      - name: Start service (app + db)
         run: docker compose up -d app db
 
-      - name: Wait for port 8000
-        run: |
-          for i in {1..60}; do
-            if nc -z localhost 8000; then
-              echo "Port 8000 is open"
-              exit 0
-            fi
-            echo "Waiting for app to open port 8000..."
-            sleep 2
-          done
-          echo "App did not start listening on 8000" >&2
-          docker compose logs app || true
-          exit 1
+      - name: Wait for Postgres (inside container)
+        run: docker compose exec -T db sh -c 'for i in $(seq 1 60);
+          do pg_isready -U postgres -d duplicatefinder && exit 0;
+          echo "waiting for postgres..."; sleep 2; done; exit 1'
 
-      - name: Health check
-        run: curl -sSf http://localhost:8000/api/health
+      - name: Wait for app to listen on 8000 (inside container)
+        run: |
+          docker compose exec -T app sh -lc '
+            for i in $(seq 1 60); do
+              if command -v ss >/dev/null 2>&1; then ss -ltn | grep -q ":8000" && exit 0; fi
+              if command -v netstat >/dev/null 2>&1; then netstat -ltn | grep -q ":8000" && exit 0; fi
+              echo "waiting for app listener..."; sleep 2
+            done
+            exit 1
+          ' || (docker compose logs app && exit 1)
+
+      - name: Health check (inside container)
+        run: |
+          docker compose exec -T app sh -lc '
+            (command -v curl >/dev/null 2>&1) || (apk add --no-cache curl 2>/dev/null || apt-get update && apt-get install -y curl 2>/dev/null || true)
+            set -e
+            curl -sSf http://localhost:8000/api/health
+          '
+
+      - name: Dump app logs on failure
+        if: failure()
+        run: docker compose logs app
 
       - name: Stop services
         if: always()
@@ -149,25 +163,28 @@ jobs:
 
       - name: Create .env for Docker Compose
         run: |
-          echo "DATABASE_URL=${DATABASE_URL}" >> .env
-          echo "CELERY_BROKER_URL=${CELERY_BROKER_URL}" >> .env
-          echo "CELERY_BACKEND_URL=${CELERY_BACKEND_URL}" >> .env
-          echo "FASTAPI_ENDPOINT=${FASTAPI_ENDPOINT}" >> .env
-          echo "GOOGLE_PHOTOS_URL=${GOOGLE_PHOTOS_URL}" >> .env
-          echo "GOOGLE_SEARCH_URL=${GOOGLE_SEARCH_URL}" >> .env
-          echo "GOOGLE_USERINFO_URL=${GOOGLE_USERINFO_URL}" >> .env
-          echo "SESSION_COOKIE_PATH=${SESSION_COOKIE_PATH}" >> .env
-          echo "INGESTION_MODE=${INGESTION_MODE}" >> .env
-          echo "INGESTION_YEAR=${INGESTION_YEAR}" >> .env
-          echo "INGESTION_START_PAGE=${INGESTION_START_PAGE}" >> .env
-          echo "INGESTION_END_PAGE=${INGESTION_END_PAGE}" >> .env
-          echo "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" >> .env
-          echo "GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" >> .env
-          echo "GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}" >> .env
-          echo "ENCRYPTION_KEY=${ENCRYPTION_KEY}" >> .env
+          {
+            echo "ENCRYPTION_KEY=${ENCRYPTION_KEY:-$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')}"
+            echo "DATABASE_URL=${DATABASE_URL}"
+            echo "CELERY_BROKER_URL=${CELERY_BROKER_URL}"
+            echo "CELERY_BACKEND_URL=${CELERY_BACKEND_URL}"
+            echo "FASTAPI_ENDPOINT=${FASTAPI_ENDPOINT}"
+            echo "GOOGLE_PHOTOS_URL=${GOOGLE_PHOTOS_URL}"
+            echo "GOOGLE_SEARCH_URL=${GOOGLE_SEARCH_URL}"
+            echo "GOOGLE_USERINFO_URL=${GOOGLE_USERINFO_URL}"
+            echo "SESSION_COOKIE_PATH=${SESSION_COOKIE_PATH}"
+            echo "INGESTION_MODE=${INGESTION_MODE}"
+            echo "INGESTION_YEAR=${INGESTION_YEAR}"
+            echo "INGESTION_START_PAGE=${INGESTION_START_PAGE}"
+            echo "INGESTION_END_PAGE=${INGESTION_END_PAGE}"
+            echo "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}"
+            echo "GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}"
+            echo "GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}"
+            echo "ENCRYPTION_KEY=${ENCRYPTION_KEY}"
+          } > .env
 
-      - name: Start db (compose)
-        run: docker compose up -d db
+      - name: Start service (app + db)
+        run: docker compose up -d app db
 
       - name: Apply DB migrations (if any)
         run: |
