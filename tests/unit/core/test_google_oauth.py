@@ -9,7 +9,7 @@ from tests.utils.factories import make_test_user
 
 
 @pytest.mark.asyncio
-async def test_refresh_token_success(monkeypatch: pytest.MonkeyPatch, session: Session) -> None:
+async def test_refresh_token_success(monkeypatch: pytest.MonkeyPatch) -> None:
     user = make_test_user()
     user.set_google_tokens("expired_token", "valid_refresh_token", expires_in=-10)
 

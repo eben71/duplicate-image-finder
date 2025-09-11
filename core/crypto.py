@@ -11,8 +11,8 @@ def _validate_key(value: str) -> bytes:
     except Exception as e:
         raise ValueError(
             "ENCRYPTION_KEY must be a 32-byte url-safe base64 string. "
-            "Generate one with: python -c 'from cryptography.fernet "
-            "import Fernet; print(Fernet.generate_key().decode())'"
+            "Generate one with: python -c 'from cryptography.fernet import Fernet; "
+            "print(Fernet.generate_key().decode())'"
         ) from e
     return b
 

@@ -9,6 +9,6 @@ class UserRead(BaseModel):
     full_name: str
     profile_picture: str | None = None
     ingestion_mode: IngestionMode
-    requires_reauth: bool
+    requires_reauth: bool = False
 
     model_config = {"from_attributes": True}
