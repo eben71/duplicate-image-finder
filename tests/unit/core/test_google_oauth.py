@@ -18,7 +18,7 @@ async def test_refresh_token_success(monkeypatch: pytest.MonkeyPatch) -> None:
     # Mock httpx.Response
     mock_response = Mock(spec=Response)
     mock_response.status_code = 200
-    mock_response.raise_for_status = Mock()  # <-- sync, not async
+    mock_response.raise_for_status = Mock()
     mock_response.json = Mock(
         return_value={"access_token": "tok", "expires_in": 3600, "refresh_token": "r1"}
     )

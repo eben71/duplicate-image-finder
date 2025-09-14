@@ -44,7 +44,7 @@ class User(SQLModel, table=True):  # type: ignore
     deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True)))
 
     @field_validator("token_expiry", "created_at", "updated_at", "deleted_at", mode="after")
-    def ensure_utc(cls, v: datetime | None) -> datetime | None:
+    def validate_utc_timezone(cls, v: datetime | None) -> datetime | None:
         if v is None:
             return None
 
