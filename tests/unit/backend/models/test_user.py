@@ -4,7 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from backend.models.user import IngestionMode
-from core.google_oauth import _is_token_expired
+from core.google_oauth import is_token_expired
 from tests.utils.factories import make_test_user
 
 
@@ -73,15 +73,15 @@ def test_token_expired_logic() -> None:
 
     # simulate expiry in the past
     user.token_expiry = datetime.now(UTC) - timedelta(minutes=5)
-    assert _is_token_expired(user) is True
+    assert is_token_expired(user) is True
 
     # simulate valid token in the future
     user.token_expiry = datetime.now(UTC) + timedelta(hours=1)
-    assert _is_token_expired(user) is False
+    assert is_token_expired(user) is False
 
     # no expiry set
     user.token_expiry = None
-    assert _is_token_expired(user) is True
+    assert is_token_expired(user) is True
 
 
 def test_reject_non_utc_datetime() -> None:

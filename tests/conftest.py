@@ -1,6 +1,7 @@
 # tests/conftest.py
 from __future__ import annotations
 
+import base64
 import os
 import tempfile
 from collections.abc import AsyncGenerator, Generator
@@ -13,18 +14,28 @@ from sqlmodel import Session, SQLModel, create_engine
 
 # --- Make sure a valid Fernet key exists for tests (no real secrets needed) ---
 def _ensure_encryption_key() -> None:
-    if os.environ.get("ENCRYPTION_KEY"):
-        return
+    key = os.environ.get("ENCRYPTION_KEY")
+
+    if key:
+        try:
+            from cryptography.fernet import Fernet
+
+            Fernet(key.encode())
+            return
+        except ImportError:
+            # Without cryptography, do a light heuristic check (length 44)
+            if len(key) == 44:
+                return
+            # else fall through to regenerate a valid-looking key
+        except ValueError:
+            pass
+
     try:
         from cryptography.fernet import Fernet
-
+    except ImportError:
+        os.environ["ENCRYPTION_KEY"] = base64.urlsafe_b64encode(os.urandom(32)).decode()
+    else:
         os.environ["ENCRYPTION_KEY"] = Fernet.generate_key().decode()
-    except Exception:
-        # Fallback without cryptography (rare)
-        import base64
-        import os as _os
-
-        os.environ["ENCRYPTION_KEY"] = base64.urlsafe_b64encode(_os.urandom(32)).decode()
 
 
 _ensure_encryption_key()
@@ -88,3 +99,15 @@ async def async_client_fixture(session: Session) -> AsyncGenerator[AsyncClient, 
             yield client
     finally:
         app.dependency_overrides.clear()
+
+
+def test_fallback_key_format() -> None:
+    k = base64.urlsafe_b64encode(os.urandom(32)).decode()
+    assert len(k) == 44  # Fernet base64 length
+    assert all(c.isalnum() or c in "-_" for c in k.rstrip("="))  # urlsafe
+
+
+def test_ensure_sets_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ENCRYPTION_KEY", raising=False)
+    _ensure_encryption_key()
+    assert "ENCRYPTION_KEY" in os.environ

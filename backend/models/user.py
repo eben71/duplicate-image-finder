@@ -43,10 +43,16 @@ class User(SQLModel, table=True):  # type: ignore
 
     deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True)))
 
-    @field_validator("token_expiry", "created_at", "updated_at", "deleted_at", mode="before")
+    @field_validator("token_expiry", "created_at", "updated_at", "deleted_at", mode="after")
     def ensure_utc(cls, v: datetime | None) -> datetime | None:
-        if v is not None and v.tzinfo != UTC:
-            raise ValueError("Datetime must be in UTC")
+        if v is None:
+            return None
+
+        if v.tzinfo is None:
+            raise ValueError("Datetime must include timezone information (UTC).")
+        if v.tzinfo != UTC:
+            raise ValueError("Datetime must be in UTC.")
+
         return v
 
     def set_google_tokens(

@@ -49,7 +49,7 @@ async def exchange_code_for_token(code: str) -> dict:
     return response.json()
 
 
-def _is_token_expired(user: User) -> bool:
+def is_token_expired(user: User) -> bool:
     if not user.token_expiry:
         return True
 
@@ -57,16 +57,20 @@ def _is_token_expired(user: User) -> bool:
 
 
 async def get_fresh_access_token(user: User, session: Session) -> str:
-    if _is_token_expired(user):
+    if is_token_expired(user):
         await refresh_access_token(user, session)
 
-    token = user.get_google_access_token()
-    if not token:
+    token: str | None = user.get_google_access_token()
+
+    if token is None:
         raise ValueError(
             "Token refresh did not yield an access_token. User may require re-authentication."
         )
 
-    return token  # type: ignore[return-value]
+    if not token:
+        raise ValueError("Access token is empty. User may require re-authentication.")
+
+    return token
 
 
 async def refresh_access_token(user: User, session: Session) -> None:
