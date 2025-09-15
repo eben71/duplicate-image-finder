@@ -8,6 +8,7 @@ from starlette.responses import RedirectResponse
 
 from backend.config.settings import settings
 from backend.db.session import get_session
+from backend.deps import get_http_client
 from backend.models.enums import IngestionMode
 from backend.models.schemas.user import UserRead
 from backend.models.user import User
@@ -40,6 +41,7 @@ def google_login() -> RedirectResponse:
 async def google_callback(
     request: Request,
     session: Annotated[Session, Depends(get_session)],
+    client: Annotated[httpx.AsyncClient, Depends(get_http_client)],
 ) -> UserRead:
     logger.debug("Entered google_callback")
     code = request.query_params.get("code")
@@ -52,21 +54,20 @@ async def google_callback(
         raise HTTPException(status_code=400, detail="Missing code parameter")
 
     try:
-        token_data = await exchange_code_for_token(code)
+        token_data = await exchange_code_for_token(code, client)
         logger.debug(f"Token data: {token_data}")
 
         # Fetch user's Google Profile data
-        async with httpx.AsyncClient() as client:
-            logger.debug(f"Making POST to {settings.GOOGLE_USERINFO_URL}")
-            userinfo_response = await client.post(
-                settings.GOOGLE_USERINFO_URL,
-                headers={"Authorization": f"Bearer {token_data['access_token']}"},
-            )
+        logger.debug(f"Making POST to {settings.GOOGLE_USERINFO_URL}")
+        userinfo_response = await client.post(
+            settings.GOOGLE_USERINFO_URL,
+            headers={"Authorization": f"Bearer {token_data['access_token']}"},
+        )
 
-            logger.debug("POST completed")
-            userinfo_response.raise_for_status()
-            profile = await userinfo_response.json()
-            logger.debug(f"Profile: {profile}")
+        logger.debug("POST completed")
+        userinfo_response.raise_for_status()
+        profile = await userinfo_response.json()
+        logger.debug(f"Profile: {profile}")
 
     except ValueError as e:
         logger.debug(f"ValueError in google_callback: {e}")
@@ -132,6 +133,7 @@ def ingest_images(
 async def ingest_photos_for_dev(
     user_id: int,
     session: Annotated[Session, Depends(get_session)],
+    client: Annotated[httpx.AsyncClient, Depends(get_http_client)],
 ) -> dict[str, Any]:
     user = session.get(User, user_id)
     if not user:
@@ -140,6 +142,7 @@ async def ingest_photos_for_dev(
     images = await fetch_images_by_year(
         user,
         session,
+        client,
         year=settings.INGESTION_YEAR,
         start_page=settings.INGESTION_START_PAGE,
         end_page=settings.INGESTION_END_PAGE,

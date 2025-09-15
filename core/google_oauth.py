@@ -1,21 +1,20 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Annotated, Any
 from urllib.parse import urlencode
 
 import httpx
+from fastapi import Depends
 from sqlmodel import Session
 
 from backend.config.settings import settings
+from backend.deps import get_http_client
 from backend.models.user import User
 
 GOOGLE_AUTH_BASE = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_SCOPE = "https://www.googleapis.com/auth/photoslibrary.readonly"
-
-# Module-level client so tests can monkeypatch `async_client`
-async_client: httpx.AsyncClient = httpx.AsyncClient(timeout=10.0)
 
 
 def get_google_auth_url(state: str = "") -> str:
@@ -35,7 +34,9 @@ def get_google_auth_url(state: str = "") -> str:
     return f"{GOOGLE_AUTH_BASE}?{urlencode(params)}"
 
 
-async def exchange_code_for_token(code: str) -> dict:
+async def exchange_code_for_token(
+    code: str, client: Annotated[httpx.AsyncClient, Depends(get_http_client)]
+) -> dict:
     data = {
         "code": code,
         "client_id": settings.GOOGLE_CLIENT_ID,
@@ -44,7 +45,7 @@ async def exchange_code_for_token(code: str) -> dict:
         "grant_type": "authorization_code",
     }
 
-    response = await async_client.post(GOOGLE_TOKEN_URL, data=data)
+    response = await client.post(GOOGLE_TOKEN_URL, data=data)
     response.raise_for_status()
     return response.json()
 
@@ -56,9 +57,11 @@ def is_token_expired(user: User) -> bool:
     return user.token_expiry <= datetime.now(UTC)
 
 
-async def get_fresh_access_token(user: User, session: Session) -> str:
+async def get_fresh_access_token(
+    user: User, session: Session, client: Annotated[httpx.AsyncClient, Depends(get_http_client)]
+) -> str:
     if is_token_expired(user):
-        await refresh_access_token(user, session)
+        await refresh_access_token(user, session, client)
 
     token: str | None = user.get_google_access_token()
 
@@ -73,7 +76,9 @@ async def get_fresh_access_token(user: User, session: Session) -> str:
     return token
 
 
-async def refresh_access_token(user: User, session: Session) -> None:
+async def refresh_access_token(
+    user: User, session: Session, client: Annotated[httpx.AsyncClient, Depends(get_http_client)]
+) -> None:
     try:
         refresh_token = user.get_google_refresh_token()
         if not refresh_token:
@@ -89,7 +94,7 @@ async def refresh_access_token(user: User, session: Session) -> None:
             "grant_type": "refresh_token",
         }
 
-        response = await async_client.post(GOOGLE_TOKEN_URL, data=data)
+        response = await client.post(GOOGLE_TOKEN_URL, data=data)
         response.raise_for_status()
 
         token_data = response.json()
