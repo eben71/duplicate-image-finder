@@ -45,8 +45,12 @@ def _ensure_encryption_key() -> None:
             if _is_fernet_like(key):
                 return
         else:
-            Fernet(key.encode())
-            return
+            try:
+                Fernet(key.encode())
+            except Exception:
+                key = None
+            else:
+                return
 
     try:
         from cryptography.fernet import Fernet  # type: ignore
