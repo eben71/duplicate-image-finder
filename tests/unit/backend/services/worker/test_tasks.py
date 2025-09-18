@@ -1,5 +1,8 @@
-from backend.services.worker.tasks import generate_embedding
 from typing import Any
+
+from sqlmodel import select
+
+from backend.services.worker.tasks import generate_embedding
 
 
 def test_generate_embedding_creates_vector(session: Any) -> None:
@@ -11,7 +14,7 @@ def test_generate_embedding_creates_vector(session: Any) -> None:
 
     from backend.models.embedding import ImageEmbedding
 
-    stored = session.query(ImageEmbedding).filter_by(image_id=image_id).first()
+    stored = session.exec(select(ImageEmbedding).where(ImageEmbedding.image_id == image_id)).first()
 
     assert stored is not None
     assert len(stored.vector) == 512 * 4  # float32 = 4 bytes

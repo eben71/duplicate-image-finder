@@ -1,0 +1,35 @@
+name: Trigger integration via comment
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  add:
+    if: >
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/run-integration')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add run-integration label
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: run-integration
+
+  remove:
+    if: >
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/cancel-integration')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove run-integration label
+        uses: actions-ecosystem/action-remove-labels@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: run-integration

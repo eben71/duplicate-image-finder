@@ -1,4 +1,6 @@
-from unittest.mock import patch, AsyncMock
+from unittest import mock
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from httpx import AsyncClient
 
@@ -18,40 +20,33 @@ USERINFO_RESPONSE = {
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 @patch("backend.api.routes.exchange_code_for_token", new_callable=AsyncMock)
-@patch("httpx.AsyncClient.post", new_callable=AsyncMock)
+@patch("httpx.AsyncClient.get", new_callable=AsyncMock)
 async def test_auth_callback_creates_user(
-    mock_post: AsyncMock,
+    mock_get: AsyncMock,
     mock_exchange: AsyncMock,
-    client: AsyncClient,
+    app_client: AsyncClient,
 ) -> None:
     """
     Test that the auth callback successfully creates a user with valid OAuth code.
 
     Args:
         mock_exchange: Mock for exchange_code_for_token
-        mock_post: Mock for httpx.AsyncClient.post
+        mock_get: Mock for httpx.AsyncClient.get
         client: Test client (e.g., from FastAPI TestClient)
         mocker: Pytest fixture for additional mocking if needed
     """
     # Configure mocks
     mock_exchange.return_value = TOKEN_RESPONSE
 
-    mock_post.return_value = AsyncMock(
-        status_code=200,
-        json=AsyncMock(return_value=USERINFO_RESPONSE),  # Make json an awaitable
-    )
-
-    mock_client = AsyncMock()
-    mock_response = AsyncMock()
-    mock_response.status_code = 200
-    mock_response.raise_for_status = lambda: None
-    mock_response.json = AsyncMock(return_value=USERINFO_RESPONSE)
-
-    mock_client.__aenter__.return_value.post.return_value = mock_response
+    mock_response = AsyncMock(status_code=200)
+    mock_response.json = mock.Mock(return_value=USERINFO_RESPONSE)
+    mock_response.raise_for_status = mock.Mock()
+    mock_get.return_value = mock_response
 
     # Perform the request
-    response = await client.get(f"/api/auth/callback?code={FAKE_CODE}")
+    response = await app_client.get(f"/api/auth/callback?code={FAKE_CODE}")
 
     # Assertions
     assert response.status_code == 200
@@ -61,11 +56,12 @@ async def test_auth_callback_creates_user(
     assert data["profile_picture"] == USERINFO_RESPONSE["profile_picture"]
 
     # Verify mocks were called
-    mock_exchange.assert_called_once_with(FAKE_CODE)
-    mock_post.assert_called_once()
+    mock_exchange.assert_called_once_with(FAKE_CODE, mock.ANY)
+    mock_get.assert_called_once()
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 @patch("backend.api.routes.exchange_code_for_token", new_callable=AsyncMock)
 async def test_auth_callback_handles_invalid_code(
     mock_exchange: AsyncMock, client: AsyncClient

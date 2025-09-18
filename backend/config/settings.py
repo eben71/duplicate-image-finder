@@ -1,11 +1,12 @@
 # backend/config/settings.py
 from __future__ import annotations
 
-import sys
 import logging
+import sys
 from pathlib import Path
-from typing import Optional, no_type_check
-from pydantic import ValidationError, Field
+from typing import no_type_check
+
+from pydantic import Field, ValidationError
 from pydantic_settings import BaseSettings
 
 
@@ -24,13 +25,13 @@ class Settings(BaseSettings):
     ENCRYPTION_KEY: str = Field(..., validation_alias="ENCRYPTION_KEY")
 
     # ───────────────────────── Optional / defaults ─────────────────────────────
-    SESSION_COOKIE_PATH: Optional[Path] = Field(
+    SESSION_COOKIE_PATH: Path | None = Field(
         Path("~/.gp_session.json").expanduser(), validation_alias="SESSION_COOKIE_PATH"
     )
     INGESTION_MODE: str = Field("api", validation_alias="INGESTION_MODE")
-    INGESTION_YEAR: Optional[int] = None
+    INGESTION_YEAR: int | None = None
     INGESTION_START_PAGE: int = Field(1, validation_alias="INGESTION_START_PAGE")
-    INGESTION_END_PAGE: Optional[int] = None
+    INGESTION_END_PAGE: int | None = None
     INGESTION_PAGE_SIZE: int = Field(100, validation_alias="INGESTION_PAGE_SIZE")
     LOG_LEVEL: int = logging.DEBUG
 

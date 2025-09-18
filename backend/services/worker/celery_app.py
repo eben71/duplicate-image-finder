@@ -1,5 +1,6 @@
-from backend.config.settings import settings
 from celery import Celery
+
+from backend.config.settings import settings
 
 celery_app = Celery(
     "duplicate_finder",

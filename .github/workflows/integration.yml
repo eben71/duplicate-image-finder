@@ -1,0 +1,105 @@
+name: Integration tests
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+concurrency:
+  group: integ-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb  # pragma: allowlist secret
+  CELERY_BROKER_URL: redis://localhost:6379/0
+  CELERY_BACKEND_URL: redis://redis:6379/1
+  FASTAPI_ENDPOINT: http://app:8000/api/v1/images/scraped
+  GOOGLE_PHOTOS_URL: https://photos.google.com/
+  GOOGLE_SEARCH_URL: https://photoslibrary.googleapis.com/v1/mediaItems:search
+  GOOGLE_USERINFO_URL: https://www.googleapis.com/oauth2/v3/userinfo
+  SESSION_COOKIE_PATH: ~/.gp_session.json
+  INGESTION_MODE: api
+  INGESTION_YEAR: 2025
+  INGESTION_START_PAGE: 1
+  INGESTION_END_PAGE: 100
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+  GOOGLE_REDIRECT_URI: http://localhost:8000/api/auth/callback
+  ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+
+jobs:
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+
+    # Run if:
+    #  - push to main (always), OR
+    #  - PR has the 'run-integration' label
+    if: >
+      github.event_name == 'push' ||
+      contains(github.event.pull_request.labels.*.name, 'run-integration')
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/python-setup
+        with:
+          python-version: "3.12"
+
+      - name: Install app deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create .env for Docker Compose
+        run: |
+          {
+            echo "ENCRYPTION_KEY=${ENCRYPTION_KEY:-$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')}"
+            echo "DATABASE_URL=${DATABASE_URL}"
+            echo "CELERY_BROKER_URL=${CELERY_BROKER_URL}"
+            echo "CELERY_BACKEND_URL=${CELERY_BACKEND_URL}"
+            echo "FASTAPI_ENDPOINT=${FASTAPI_ENDPOINT}"
+            echo "GOOGLE_PHOTOS_URL=${GOOGLE_PHOTOS_URL}"
+            echo "GOOGLE_SEARCH_URL=${GOOGLE_SEARCH_URL}"
+            echo "GOOGLE_USERINFO_URL=${GOOGLE_USERINFO_URL}"
+            echo "SESSION_COOKIE_PATH=${SESSION_COOKIE_PATH}"
+            echo "INGESTION_MODE=${INGESTION_MODE}"
+            echo "INGESTION_YEAR=${INGESTION_YEAR}"
+            echo "INGESTION_START_PAGE=${INGESTION_START_PAGE}"
+            echo "INGESTION_END_PAGE=${INGESTION_END_PAGE}"
+            echo "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}"
+            echo "GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}"
+            echo "GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}"
+          } > .env
+
+      - name: Start services (app + db)
+        run: docker compose up -d app db
+
+      - name: Wait for Postgres (inside container)
+        run: docker compose exec -T db sh -c 'for i in $(seq 1 60);
+          do pg_isready -U postgres -d duplicatefinder && exit 0;
+          echo "waiting for postgres..."; sleep 2; done; exit 1'
+
+      - name: Wait for app health
+        run: |
+          for i in $(seq 1 60); do
+            if docker compose exec -T app sh -lc 'wget -qO- http://localhost:8000/api/health >/dev/null 2>&1 || curl -fsS http://localhost:8000/api/health >/dev/null 2>&1'; then
+              echo "Health OK"; exit 0
+            fi
+            echo "Waiting for /api/health... ($i/60)"; sleep 2
+          done
+          echo "Health check failed; dumping logs" >&2
+          docker compose logs app
+          exit 1
+
+      - name: Run integration pytest
+        run: docker compose run --rm app pytest -m integration --disable-warnings
+
+      - name: Stop services
+        if: always()
+        run: docker compose down -v

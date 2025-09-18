@@ -1,5 +1,4 @@
-from sqlmodel import SQLModel, Field
-from typing import Optional
+from sqlmodel import Field, SQLModel
 
 
 class ImageEmbedding(SQLModel, table=True):  # type: ignore
@@ -7,7 +6,7 @@ class ImageEmbedding(SQLModel, table=True):  # type: ignore
         "validate_default": True,
         "validate_assignment": True,
     }
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     image_id: int = Field(foreign_key="image.id")
     vector: bytes

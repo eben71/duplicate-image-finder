@@ -1,8 +1,15 @@
-import httpx
-from datetime import datetime, timezone
-from sqlmodel import Session
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from typing import Annotated, Any
 from urllib.parse import urlencode
+
+import httpx
+from fastapi import Depends
+from sqlmodel import Session
+
 from backend.config.settings import settings
+from backend.deps import get_http_client
 from backend.models.user import User
 
 GOOGLE_AUTH_BASE = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -17,14 +24,19 @@ def get_google_auth_url(state: str = "") -> str:
         "response_type": "code",
         "scope": GOOGLE_SCOPE,
         "access_type": "offline",
+        "include_granted_scopes": "true",
         "prompt": "consent",
-        "state": state,
     }
+
+    if state:
+        params["state"] = state
 
     return f"{GOOGLE_AUTH_BASE}?{urlencode(params)}"
 
 
-async def exchange_code_for_token(code: str) -> dict:
+async def exchange_code_for_token(
+    code: str, client: Annotated[httpx.AsyncClient, Depends(get_http_client)]
+) -> dict:
     data = {
         "code": code,
         "client_id": settings.GOOGLE_CLIENT_ID,
@@ -33,56 +45,69 @@ async def exchange_code_for_token(code: str) -> dict:
         "grant_type": "authorization_code",
     }
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(GOOGLE_TOKEN_URL, data=data)
-        response.raise_for_status()
-        return response.json()
+    response = await client.post(GOOGLE_TOKEN_URL, data=data)
+    response.raise_for_status()
+    return response.json()
 
 
 def is_token_expired(user: User) -> bool:
     if not user.token_expiry:
         return True
 
-    return user.token_expiry <= datetime.now(timezone.utc)
+    return user.token_expiry <= datetime.now(UTC)
 
 
-async def get_fresh_access_token(user: User, session: Session) -> str:
+async def get_fresh_access_token(
+    user: User, session: Session, client: Annotated[httpx.AsyncClient, Depends(get_http_client)]
+) -> str:
     if is_token_expired(user):
-        await refresh_access_token(user, session)
+        await refresh_access_token(user, session, client)
 
-    token = user.get_google_access_token()
+    token: str | None = user.get_google_access_token()
+
+    if token is None:
+        raise ValueError(
+            "Token refresh did not yield an access_token. User may require re-authentication."
+        )
+
     if not token:
-        raise ValueError("Missing access token. User may require re-authentication.")
+        raise ValueError("Access token is empty. User may require re-authentication.")
 
     return token
 
 
-async def refresh_access_token(user: User, session: Session) -> None:
+async def refresh_access_token(
+    user: User, session: Session, client: Annotated[httpx.AsyncClient, Depends(get_http_client)]
+) -> None:
     try:
         refresh_token = user.get_google_refresh_token()
         if not refresh_token:
-            raise ValueError(
-                "User does not have a refresh token. They must re-authenticate."
-            )
+            user.requires_reauth = True
+            session.add(user)
+            session.commit()
+            raise ValueError("User does not have a refresh token. They must re-authenticate.")
 
-        data = {
+        data: dict[str, Any] = {
             "client_id": settings.GOOGLE_CLIENT_ID,
             "client_secret": settings.GOOGLE_CLIENT_SECRET,
             "refresh_token": refresh_token,
             "grant_type": "refresh_token",
         }
 
-        async with httpx.AsyncClient() as client:
-            response = await client.post(GOOGLE_TOKEN_URL, data=data)
-            response.raise_for_status()
+        response = await client.post(GOOGLE_TOKEN_URL, data=data)
+        response.raise_for_status()
 
-        token_data = await response.json()
+        token_data = response.json()
+        # Google may omit refresh_token on refresh; keep the old one unless a new one is provided
+        new_refresh: str | None = token_data.get("refresh_token") or user.get_google_refresh_token()
+        expires_in = int(token_data.get("expires_in", 3600))
 
         user.set_google_tokens(
             access_token=token_data["access_token"],
-            refresh_token=None,
-            expires_in=token_data["expires_in"],
+            refresh_token=new_refresh,
+            expires_in=expires_in,
         )
+        user.requires_reauth = False
         session.add(user)
         session.commit()
 
@@ -90,6 +115,4 @@ async def refresh_access_token(user: User, session: Session) -> None:
         user.requires_reauth = True
         session.add(user)
         session.commit()
-        raise Exception(
-            "Google token refresh failed. User must re-authenticate."
-        ) from e
+        raise Exception("Google token refresh failed. User must re-authenticate.") from e

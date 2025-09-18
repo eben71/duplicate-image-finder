@@ -1,16 +1,19 @@
-import httpx
-from fastapi import Request, Depends, HTTPException, APIRouter, Query
-from starlette.responses import RedirectResponse
-from sqlmodel import Session, select
-from backend.models.enums import IngestionMode
-from backend.config.settings import settings
-from core.google_oauth import get_google_auth_url, exchange_code_for_token
-from backend.db.session import get_session
-from backend.models.user import User
-from backend.models.schemas.user import UserRead
-from backend.services.ingestion.google_photos import fetch_images_by_year
-from typing import Any
 import logging
+from typing import Annotated, Any
+
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlmodel import Session, select
+from starlette.responses import RedirectResponse
+
+from backend.config.settings import settings
+from backend.db.session import get_session
+from backend.deps import get_http_client
+from backend.models.enums import IngestionMode
+from backend.models.schemas.user import UserRead
+from backend.models.user import User
+from backend.services.ingestion.google_photos import fetch_images_by_year
+from core.google_oauth import exchange_code_for_token, get_google_auth_url
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -36,7 +39,9 @@ def google_login() -> RedirectResponse:
 
 @api_router.get("/auth/callback", response_model=UserRead)
 async def google_callback(
-    request: Request, session: Session = Depends(get_session)
+    request: Request,
+    session: Annotated[Session, Depends(get_session)],
+    client: Annotated[httpx.AsyncClient, Depends(get_http_client)],
 ) -> UserRead:
     logger.debug("Entered google_callback")
     code = request.query_params.get("code")
@@ -49,28 +54,27 @@ async def google_callback(
         raise HTTPException(status_code=400, detail="Missing code parameter")
 
     try:
-        token_data = await exchange_code_for_token(code)
+        token_data = await exchange_code_for_token(code, client)
         logger.debug(f"Token data: {token_data}")
 
         # Fetch user's Google Profile data
-        async with httpx.AsyncClient() as client:
-            logger.debug(f"Making POST to {settings.GOOGLE_USERINFO_URL}")
-            userinfo_response = await client.post(
-                settings.GOOGLE_USERINFO_URL,
-                headers={"Authorization": f"Bearer {token_data['access_token']}"},
-            )
+        logger.debug(f"Making POST to {settings.GOOGLE_USERINFO_URL}")
+        userinfo_response = await client.get(
+            settings.GOOGLE_USERINFO_URL,
+            headers={"Authorization": f"Bearer {token_data['access_token']}"},
+        )
 
-            logger.debug("POST completed")
-            userinfo_response.raise_for_status()
-            profile = await userinfo_response.json()
-            logger.debug(f"Profile: {profile}")
+        logger.debug("POST completed")
+        userinfo_response.raise_for_status()
+        profile = userinfo_response.json()
+        logger.debug(f"Profile: {profile}")
 
     except ValueError as e:
-        logger.debug(f"ValueError: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.debug(f"ValueError in google_callback: {e}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        logger.debug(f"Unexpected error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        logger.debug(f"Unexpected error in google_callback: {e}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}") from e
 
     email = profile["email"]
     full_name = profile.get("full_name", "")
@@ -84,6 +88,7 @@ async def google_callback(
             refresh_token=token_data.get("refresh_token"),
             expires_in=token_data["expires_in"],
         )
+        user.requires_reauth = False
     else:
         user = User(
             email=email,
@@ -95,6 +100,7 @@ async def google_callback(
             refresh_token=token_data.get("refresh_token"),
             expires_in=token_data["expires_in"],
         )
+        user.requires_reauth = False
         session.add(user)
 
     session.commit()
@@ -106,8 +112,17 @@ async def google_callback(
 # --- Ingestion Routes ---
 @api_router.post("/ingest", response_model=dict[str, Any])
 def ingest_images(
-    user_id: int, mode: IngestionMode = Query(default=IngestionMode.SCRAPE)
+    user_id: int,
+    session: Annotated[Session, Depends(get_session)],
+    mode: Annotated[IngestionMode, Query()] = IngestionMode.SCRAPE,
 ) -> dict[str, Any]:
+    if user_id <= 0:
+        raise HTTPException(status_code=400, detail="user_id must be a positive integer")
+
+    user = session.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
     if mode == IngestionMode.SCRAPE:
         return {"status": "scraped images"}
     elif mode == IngestionMode.API:
@@ -119,7 +134,8 @@ def ingest_images(
 @api_router.get("/ingest/dev", tags=["Ingestion"], response_model=dict[str, Any])
 async def ingest_photos_for_dev(
     user_id: int,
-    session: Session = Depends(get_session),
+    session: Annotated[Session, Depends(get_session)],
+    client: Annotated[httpx.AsyncClient, Depends(get_http_client)],
 ) -> dict[str, Any]:
     user = session.get(User, user_id)
     if not user:
@@ -128,6 +144,7 @@ async def ingest_photos_for_dev(
     images = await fetch_images_by_year(
         user,
         session,
+        client,
         year=settings.INGESTION_YEAR,
         start_page=settings.INGESTION_START_PAGE,
         end_page=settings.INGESTION_END_PAGE,

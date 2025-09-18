@@ -1,12 +1,13 @@
+from datetime import UTC, datetime, timedelta
+
 import pytest
 from pydantic import ValidationError
-from datetime import datetime, timedelta, timezone
+
 from backend.models.user import IngestionMode
 from core.google_oauth import is_token_expired
 from tests.utils.factories import make_test_user
 
 
-@pytest.mark.unit
 def test_create_user() -> None:
     user = make_test_user(
         email="test@example.com", full_name="Test", ingestion_mode=IngestionMode.SCRAPE
@@ -16,7 +17,6 @@ def test_create_user() -> None:
     assert user.ingestion_mode == IngestionMode.SCRAPE
 
 
-@pytest.mark.unit
 def test_create_user_from_google_login() -> None:
     user = make_test_user(
         email="test@example.com",
@@ -28,9 +28,7 @@ def test_create_user_from_google_login() -> None:
 
     assert user.get_google_access_token() == "abc123"
     assert user.get_google_refresh_token() == "refresh123"
-    assert user.token_expiry is not None and user.token_expiry > datetime.now(
-        timezone.utc
-    )
+    assert user.token_expiry is not None and user.token_expiry > datetime.now(UTC)
     assert user.requires_reauth is False
 
 
@@ -67,18 +65,18 @@ def test_token_expiry_is_set_to_utc() -> None:
     user = make_test_user()
     user.set_google_tokens("abc", "xyz", expires_in=3600)
     assert user.token_expiry is not None
-    assert user.token_expiry.tzinfo == timezone.utc
+    assert user.token_expiry.tzinfo == UTC
 
 
 def test_token_expired_logic() -> None:
     user = make_test_user(with_tokens=True)
 
     # simulate expiry in the past
-    user.token_expiry = datetime.now(timezone.utc) - timedelta(minutes=5)
+    user.token_expiry = datetime.now(UTC) - timedelta(minutes=5)
     assert is_token_expired(user) is True
 
     # simulate valid token in the future
-    user.token_expiry = datetime.now(timezone.utc) + timedelta(hours=1)
+    user.token_expiry = datetime.now(UTC) + timedelta(hours=1)
     assert is_token_expired(user) is False
 
     # no expiry set
@@ -90,31 +88,29 @@ def test_reject_non_utc_datetime() -> None:
     # Build a naive datetime (no tzinfo)
     non_utc = datetime.now()
     with pytest.raises(ValidationError):
-        make_test_user(
-            email="updated@example.com", full_name="Updated User", updated_at=non_utc
-        )
+        make_test_user(email="updated@example.com", full_name="Updated User", updated_at=non_utc)
 
 
 def test_updated_at_must_be_utc() -> None:
-    utc_now = datetime.now(timezone.utc)
+    utc_now = datetime.now(UTC)
     user = make_test_user(
         email="updated@example.com",
         full_name="Updated User",
         updated_at=utc_now,
     )
     assert user.updated_at == utc_now
-    assert user.updated_at.tzinfo == timezone.utc
+    assert user.updated_at.tzinfo == UTC
 
 
 def test_deleted_at_must_be_utc() -> None:
-    utc_now = datetime.now(timezone.utc)
+    utc_now = datetime.now(UTC)
     user = make_test_user(
         email="deleted@example.com",
         full_name="Deleted User",
         deleted_at=utc_now,
     )
     assert user.deleted_at == utc_now
-    assert user.deleted_at.tzinfo == timezone.utc
+    assert user.deleted_at.tzinfo == UTC
 
 
 def test_reject_non_utc_updated_at() -> None:

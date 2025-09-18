@@ -1,17 +1,32 @@
 import pytest
 from httpx import AsyncClient
+from sqlmodel import Session
 
-BASE = "/api"
-
-
-@pytest.mark.unit
-async def test_ingest_endpoint(client: AsyncClient) -> None:
-    response = await client.post(f"{BASE}/ingest?user_id=1")
-    assert response.status_code == 200
+from tests.utils.factories import make_test_user
 
 
 @pytest.mark.asyncio
-async def test_ingest_with_invalid_user_id(client: AsyncClient) -> None:
-    response = await client.post(f"{BASE}/ingest?user_id=9999")
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Not Found"}
+async def test_ingest_endpoint_with_valid_user(app_client: AsyncClient, session: Session) -> None:
+    # Arrange: create a user the route can find
+    u = make_test_user()
+    session.add(u)
+    session.commit()
+    session.refresh(u)
+
+    # Act
+    resp = await app_client.post("/api/ingest", params={"user_id": u.id})
+
+    # Assert
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_ingest_with_invalid_user_id(app_client: AsyncClient) -> None:
+    resp = await app_client.post("/api/ingest", params={"user_id": -1})
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_ingest_with_not_found_user_id(app_client: AsyncClient) -> None:
+    resp = await app_client.post("/api/ingest", params={"user_id": 9999999})
+    assert resp.status_code == 404

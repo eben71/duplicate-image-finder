@@ -32,3 +32,5 @@ coverage/
 
 # Local DB data
 postgres_data/
+.env
+.venv/
