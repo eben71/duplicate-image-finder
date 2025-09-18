@@ -2,9 +2,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy only requirements.txt first for caching
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# Copy dependency manifests first for caching
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install -r requirements-dev.txt
 
 # Set PYTHONPATH early for everything
 ENV PYTHONPATH=/app

@@ -1,10 +1,10 @@
-name: Pre-Commit and Unit tests
+name: CI (fast)
 
 on:
   pull_request:
     branches: [ main ]
+    types: [opened, synchronize, reopened, ready_for_review]
 
-# Cancel superseded runs on the same ref
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -14,73 +14,41 @@ permissions:
 
 jobs:
   lint:
-    name: 🔍 Pre‑commit checks (lint, format, secrets)
+    name: 🔍 Pre-commit checks (lint, format, secrets)
     runs-on: ubuntu-latest
-
     steps:
-    - name: Check out repository code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/python-setup
+        with:
+          python-version: "3.12"
+      - run: pip list
+      - run: |
+          pip install pre-commit detect-secrets
+          pre-commit run --all-files --show-diff-on-failure
 
-    - uses: ./.github/actions/python-setup
-      with:
-        python-version: "3.12"
-
-    - name: List package versions
-      run: pip list
-
-    - name: Run pre-commit
-      run: |
-        pip install pre-commit detect-secrets
-        pre-commit run --all-files --show-diff-on-failure
-
-  unit-tests:
+  unit:
     name: 🧪 Unit tests + coverage
     runs-on: ubuntu-latest
     needs: [lint]
-
     env:
-      DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb   # pragma: allowlist secret
-      CELERY_BROKER_URL: redis://localhost:6379/0
-      CELERY_BACKEND_URL: redis://redis:6379/1
-      FASTAPI_ENDPOINT: http://app:8000/api/v1/images/scraped
-      GOOGLE_PHOTOS_URL: https://photos.google.com/
-      GOOGLE_SEARCH_URL: https://photoslibrary.googleapis.com/v1/mediaItems:search
-      GOOGLE_USERINFO_URL: https://www.googleapis.com/oauth2/v3/userinfo
-      SESSION_COOKIE_PATH: ~/.gp_session.json
-      INGESTION_MODE: api
-      INGESTION_YEAR: 2025
-      INGESTION_START_PAGE: 1
-      INGESTION_END_PAGE: 100
-      # Only add these if your integration tests truly need Google:
-      GOOGLE_CLIENT_ID: dummy-client-id # pragma: allowlist secret
-      GOOGLE_CLIENT_SECRET: dummy-client-secret # pragma: allowlist secret
-      GOOGLE_REDIRECT_URI: http://localhost:8000/api/auth/callback
-      ENCRYPTION_KEY: dummy-32-byte-key-for-tests-only  # pragma: allowlist secret
-
+      ENCRYPTION_KEY: dummy-32-byte-key-for-tests-only
     steps:
-    - name: Check out repository code
-      uses: actions/checkout@v4
-
-    - uses: ./.github/actions/python-setup
-      with:
-        python-version: "3.12"
-
-    - name: Generate ENCRYPTION_KEY for unit tests
-      run: |
-        python - <<'PY' >> $GITHUB_ENV
-        from cryptography.fernet import Fernet
-        print("ENCRYPTION_KEY=" + Fernet.generate_key().decode())
-        PY
-
-    - name: Run unit tests + lint/mypy (Makefile)
-      run: make ci
-
-    - name: Coverage summary (stdout)
-      run: coverage report -m || true
-
-    - name: Upload coverage.xml
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: coverage.xml
-        if-no-files-found: ignore
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/python-setup
+        with:
+          python-version: "3.12"
+      - name: Generate ENCRYPTION_KEY (optional)
+        run: |
+          python - <<'PY' >> $GITHUB_ENV
+          from cryptography.fernet import Fernet
+          print("ENCRYPTION_KEY=" + Fernet.generate_key().decode())
+          PY
+      - name: Run unit tests (and mypy/flake via Makefile)
+        run: make ci
+      - name: Coverage summary
+        run: coverage report -m || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          if-no-files-found: ignore
