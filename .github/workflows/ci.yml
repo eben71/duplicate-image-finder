@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   lint:
-    name: 🔍 Pre-commit checks (lint, format, secrets)
+    name: Pre-commit checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +27,7 @@ jobs:
           pre-commit run --all-files --show-diff-on-failure
 
   unit:
-    name: 🧪 Unit tests + coverage
+    name: Unit tests and coverage
     runs-on: ubuntu-latest
     needs: [lint]
     env:

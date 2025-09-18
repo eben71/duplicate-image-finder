@@ -26,7 +26,7 @@ USERINFO_RESPONSE = {
 async def test_auth_callback_creates_user(
     mock_get: AsyncMock,
     mock_exchange: AsyncMock,
-    client: AsyncClient,
+    app_client: AsyncClient,
 ) -> None:
     """
     Test that the auth callback successfully creates a user with valid OAuth code.
@@ -46,7 +46,7 @@ async def test_auth_callback_creates_user(
     mock_get.return_value = mock_response
 
     # Perform the request
-    response = await client.get(f"/api/auth/callback?code={FAKE_CODE}")
+    response = await app_client.get(f"/api/auth/callback?code={FAKE_CODE}")
 
     # Assertions
     assert response.status_code == 200

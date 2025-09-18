@@ -1,12 +1,15 @@
 name: Integration tests
 
 on:
-  merge_group: {}
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [ main ]
+  workflow_dispatch: {}
 
 concurrency:
-  group: integ-${{ github.ref }}
+  group: integ-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -32,8 +35,16 @@ env:
 
 jobs:
   integration:
-    name: 🐘 Integration tests
+    name: Integration tests
     runs-on: ubuntu-latest
+
+    # Run if:
+    #  - push to main (always), OR
+    #  - PR has the 'run-integration' label
+    if: >
+      github.event_name == 'push' ||
+      contains(github.event.pull_request.labels.*.name, 'run-integration')
+
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/python-setup
