@@ -36,6 +36,10 @@ async def fetch_images_by_year(
         },
     }
 
+    # TODO - Initializing current_page to start_page causes the very first API response to be
+    # treated  as that page, meaning you can’t skip the earlier pages.
+    # Start counting at 1 (or track actual page index separately)
+    #  so start_page/end_page act as documented.
     current_page = start_page
     next_page_token = None
 

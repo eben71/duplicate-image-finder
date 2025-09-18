@@ -1,5 +1,3 @@
-# tests/unit/backend/api/test__debug_routes.py
-
 import pytest
 from fastapi.routing import APIRoute
 

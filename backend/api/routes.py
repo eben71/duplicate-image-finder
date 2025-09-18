@@ -59,14 +59,14 @@ async def google_callback(
 
         # Fetch user's Google Profile data
         logger.debug(f"Making POST to {settings.GOOGLE_USERINFO_URL}")
-        userinfo_response = await client.post(
+        userinfo_response = await client.get(
             settings.GOOGLE_USERINFO_URL,
             headers={"Authorization": f"Bearer {token_data['access_token']}"},
         )
 
         logger.debug("POST completed")
         userinfo_response.raise_for_status()
-        profile = await userinfo_response.json()
+        profile = userinfo_response.json()
         logger.debug(f"Profile: {profile}")
 
     except ValueError as e:
@@ -88,6 +88,7 @@ async def google_callback(
             refresh_token=token_data.get("refresh_token"),
             expires_in=token_data["expires_in"],
         )
+        user.requires_reauth = False
     else:
         user = User(
             email=email,
@@ -99,6 +100,7 @@ async def google_callback(
             refresh_token=token_data.get("refresh_token"),
             expires_in=token_data["expires_in"],
         )
+        user.requires_reauth = False
         session.add(user)
 
     session.commit()

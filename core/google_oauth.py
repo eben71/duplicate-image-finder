@@ -107,6 +107,7 @@ async def refresh_access_token(
             refresh_token=new_refresh,
             expires_in=expires_in,
         )
+        user.requires_reauth = False
         session.add(user)
         session.commit()
 
