@@ -21,9 +21,9 @@ USERINFO_RESPONSE = {
 @pytest.mark.asyncio
 @pytest.mark.integration
 @patch("backend.api.routes.exchange_code_for_token", new_callable=AsyncMock)
-@patch("httpx.AsyncClient.post", new_callable=AsyncMock)
+@patch("httpx.AsyncClient.get", new_callable=AsyncMock)
 async def test_auth_callback_creates_user(
-    mock_post: AsyncMock,
+    mock_get: AsyncMock,
     mock_exchange: AsyncMock,
     client: AsyncClient,
 ) -> None:
@@ -39,7 +39,7 @@ async def test_auth_callback_creates_user(
     # Configure mocks
     mock_exchange.return_value = TOKEN_RESPONSE
 
-    mock_post.return_value = AsyncMock(
+    mock_get.return_value = AsyncMock(
         status_code=200,
         json=AsyncMock(return_value=USERINFO_RESPONSE),  # Make json an awaitable
     )
@@ -64,7 +64,7 @@ async def test_auth_callback_creates_user(
 
     # Verify mocks were called
     mock_exchange.assert_called_once_with(FAKE_CODE)
-    mock_post.assert_called_once()
+    mock_get.assert_called_once()
 
 
 @pytest.mark.asyncio
