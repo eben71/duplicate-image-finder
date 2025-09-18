@@ -1,3 +1,4 @@
+from unittest import mock
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -32,25 +33,17 @@ async def test_auth_callback_creates_user(
 
     Args:
         mock_exchange: Mock for exchange_code_for_token
-        mock_post: Mock for httpx.AsyncClient.post
+        mock_get: Mock for httpx.AsyncClient.get
         client: Test client (e.g., from FastAPI TestClient)
         mocker: Pytest fixture for additional mocking if needed
     """
     # Configure mocks
     mock_exchange.return_value = TOKEN_RESPONSE
 
-    mock_get.return_value = AsyncMock(
-        status_code=200,
-        json=AsyncMock(return_value=USERINFO_RESPONSE),  # Make json an awaitable
-    )
-
-    mock_client = AsyncMock()
-    mock_response = AsyncMock()
-    mock_response.status_code = 200
-    mock_response.raise_for_status = lambda: None
-    mock_response.json = AsyncMock(return_value=USERINFO_RESPONSE)
-
-    mock_client.__aenter__.return_value.post.return_value = mock_response
+    mock_response = AsyncMock(status_code=200)
+    mock_response.json = mock.Mock(return_value=USERINFO_RESPONSE)
+    mock_response.raise_for_status = mock.Mock()
+    mock_get.return_value = mock_response
 
     # Perform the request
     response = await client.get(f"/api/auth/callback?code={FAKE_CODE}")
@@ -63,7 +56,7 @@ async def test_auth_callback_creates_user(
     assert data["profile_picture"] == USERINFO_RESPONSE["profile_picture"]
 
     # Verify mocks were called
-    mock_exchange.assert_called_once_with(FAKE_CODE)
+    mock_exchange.assert_called_once_with(FAKE_CODE, mock.ANY)
     mock_get.assert_called_once()
 
 
