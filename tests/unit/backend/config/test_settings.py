@@ -1,7 +1,6 @@
 from typing import Any
 
 import pytest
-from pydantic import ValidationError
 
 from backend.config import settings as settings_module
 from backend.config.settings import Settings
@@ -17,7 +16,7 @@ def _settings_kwargs(**overrides: Any) -> dict[str, Any]:
         "GOOGLE_USERINFO_URL": "https://photos.example.com/userinfo",
         "FASTAPI_ENDPOINT": "http://localhost:8000",
         "GOOGLE_CLIENT_ID": "client-id",
-        "GOOGLE_CLIENT_SECRET": "client-secret",
+        "GOOGLE_CLIENT_SECRET": "client-secret",  # pragma: allowlist secret
         "GOOGLE_REDIRECT_URI": "http://localhost:8000/callback",
         "ENCRYPTION_KEY": "a" * 44,
     }

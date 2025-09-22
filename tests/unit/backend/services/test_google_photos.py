@@ -24,8 +24,7 @@ async def test_fetch_images_by_year_collects_only_images(session: Session) -> No
 
     client = AsyncMock()
     client.post = AsyncMock(
-        side_effect=
-        [
+        side_effect=[
             _response(
                 {
                     "mediaItems": [
@@ -88,8 +87,7 @@ async def test_fetch_images_by_year_defaults_year_and_stops_at_end(session: Sess
 
     client = AsyncMock()
     client.post = AsyncMock(
-        side_effect=
-        [
+        side_effect=[
             _response({"mediaItems": [], "nextPageToken": "page-2"}),
             _response({"mediaItems": [], "nextPageToken": "page-3"}),
             _response({"mediaItems": []}),

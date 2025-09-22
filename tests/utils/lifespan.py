@@ -1,3 +1,5 @@
+from types import TracebackType
+
 from fastapi import FastAPI
 
 
@@ -10,5 +12,10 @@ class LifespanManager:
     async def __aenter__(self) -> None:
         await self._context.__aenter__()
 
-    async def __aexit__(self, exc_type, exc, tb) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         await self._context.__aexit__(exc_type, exc, tb)

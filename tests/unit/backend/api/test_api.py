@@ -1,8 +1,8 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from httpx import AsyncClient
 from sqlmodel import Session
-
-from unittest.mock import AsyncMock, patch
 
 from backend.models.enums import IngestionMode
 from tests.utils.factories import make_test_user

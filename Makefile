@@ -11,10 +11,10 @@ PYTHON := python3.12
 PIP := $(PYTHON) -m pip
 
 .PHONY: build up down restart logs health \
-        reset-db init-db alembic migrate shell celery \
-        tests-unit tests-int tests-debug tests-smoke tests-all tests tests-coverage \
-        install-deps install-dev-deps check-versions \
-        format lint typecheck ci update-python repomix
+	reset-db init-db alembic migrate shell celery \
+    tests-unit tests-int tests-debug tests-smoke tests-all tests tests-coverage \
+    install-deps install-dev-deps check-versions \
+    format lint typecheck ci update-python repomix
 
 # ---------- Docker: App Lifecycle ----------
 build:
@@ -63,14 +63,14 @@ celery:
 # ---------- Tests ----------
 # Fast unit tests (no docker). Pytest default markers from pytest.ini apply.
 tests-unit:
-        $(ACTIVATE); pytest -m "not integration and not e2e and not debug"
+	$(ACTIVATE); pytest -m "not integration and not e2e and not debug"
 
 # Integration tests via your existing compose recipe
 tests-int:
-        docker compose up -d db
-        docker compose exec -T db sh -c "while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done"
-        docker compose run --rm app pytest -m integration tests/integration --disable-warnings
-        docker compose stop db
+	docker compose up -d db
+	docker compose exec -T db sh -c "while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done"
+	docker compose run --rm app pytest tests --cov=backend --cov=frontend --disable-warnings
+	docker compose stop db
 
 # Debug-only tests (override default filter)
 tests-debug:
@@ -82,12 +82,12 @@ tests-smoke:
 
 # Run the full suite (unit + integration)
 tests-all:
-        $(MAKE) tests-unit
-        $(MAKE) tests-int
+	$(MAKE) tests-unit
+	$(MAKE) tests-int
 
 # Coverage across backend/core/frontend modules
 tests-coverage:
-        $(ACTIVATE); pytest -m "not e2e and not debug" --cov=backend --cov=core --cov=frontend --cov-report=term-missing --disable-warnings
+    $(ACTIVATE); pytest -m "not e2e and not debug" --cov=backend --cov=core --cov=frontend --cov-report=term-missing --disable-warnings
 
 # Backwards-compatible alias expected by CI/docs
 tests: tests-coverage

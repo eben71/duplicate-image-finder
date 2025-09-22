@@ -7,8 +7,8 @@ import inspect
 import os
 import re
 import tempfile
-from collections.abc import AsyncGenerator, Generator, Iterator
-from typing import Any, Final
+from collections.abc import AsyncGenerator, Generator
+from typing import Any, Final, cast
 
 import httpx
 import pytest
@@ -29,7 +29,7 @@ _DEFAULT_ENV = {
     "GOOGLE_USERINFO_URL": "https://photos.example.com/userinfo",
     "FASTAPI_ENDPOINT": "http://localhost:8000",
     "GOOGLE_CLIENT_ID": "client-id",
-    "GOOGLE_CLIENT_SECRET": "client-secret",
+    "GOOGLE_CLIENT_SECRET": "client-secret",  # pragma: allowlist secret
     "GOOGLE_REDIRECT_URI": "http://localhost:8000/callback",
 }
 
@@ -166,17 +166,21 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
         loop.close()
 
 
-def pytest_fixture_setup(fixturedef: pytest.FixtureDef[Any], request: pytest.FixtureRequest):
+def pytest_fixture_setup(
+    fixturedef: pytest.FixtureDef[Any],
+    request: pytest.FixtureRequest,
+) -> object | None:
     if fixturedef.argname == "event_loop":
         return None
 
     func = fixturedef.func
 
     if inspect.isasyncgenfunction(func):
-        loop = request.getfixturevalue("event_loop")
+        loop = cast(asyncio.AbstractEventLoop, request.getfixturevalue("event_loop"))
+        argnames = fixturedef.argnames or ()
 
         async def init() -> Any:
-            kwargs = {name: request.getfixturevalue(name) for name in fixturedef.argnames}
+            kwargs = {name: request.getfixturevalue(name) for name in argnames}
             agen = func(**kwargs)
             value = await agen.__anext__()
 
@@ -190,18 +194,19 @@ def pytest_fixture_setup(fixturedef: pytest.FixtureDef[Any], request: pytest.Fix
             return value
 
         value = loop.run_until_complete(init())
-        fixturedef.cached_result = (value, fixturedef.cache_key(request), None)
+        fixturedef.cached_result = (value, fixturedef.cache_key(cast(Any, request)), None)
         return value
 
     if inspect.iscoroutinefunction(func):
-        loop = request.getfixturevalue("event_loop")
+        loop = cast(asyncio.AbstractEventLoop, request.getfixturevalue("event_loop"))
+        argnames = fixturedef.argnames or ()
 
         async def call() -> Any:
-            kwargs = {name: request.getfixturevalue(name) for name in fixturedef.argnames}
+            kwargs = {name: request.getfixturevalue(name) for name in argnames}
             return await func(**kwargs)
 
         value = loop.run_until_complete(call())
-        fixturedef.cached_result = (value, fixturedef.cache_key(request), None)
+        fixturedef.cached_result = (value, fixturedef.cache_key(cast(Any, request)), None)
         return value
 
     return None
@@ -210,9 +215,12 @@ def pytest_fixture_setup(fixturedef: pytest.FixtureDef[Any], request: pytest.Fix
 def pytest_pyfunc_call(pyfuncitem: pytest.Function) -> bool | None:
     func = pyfuncitem.obj
     if asyncio.iscoroutinefunction(func):
-        loop = pyfuncitem.funcargs.get("event_loop")
-        argnames = getattr(pyfuncitem, "_fixtureinfo").argnames
-        kwargs = {name: pyfuncitem.funcargs[name] for name in argnames if name in pyfuncitem.funcargs}
+        loop_obj = pyfuncitem.funcargs.get("event_loop")
+        loop = cast(asyncio.AbstractEventLoop | None, loop_obj)
+        argnames = pyfuncitem._fixtureinfo.argnames
+        kwargs = {
+            name: pyfuncitem.funcargs[name] for name in argnames if name in pyfuncitem.funcargs
+        }
         if loop is None:
             loop = asyncio.new_event_loop()
             try:

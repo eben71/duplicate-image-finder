@@ -6,15 +6,12 @@ from httpx import Request, Response
 from sqlalchemy.orm import Session
 
 import core.google_oauth as oauth
-
 from tests.utils.factories import make_test_user
 
 
 @pytest.mark.asyncio
 @patch("httpx.AsyncClient.post", new_callable=AsyncMock)
-async def test_refresh_token_success(
-    mock_post: AsyncMock, http_client: httpx.AsyncClient
-) -> None:
+async def test_refresh_token_success(mock_post: AsyncMock, http_client: httpx.AsyncClient) -> None:
     user = make_test_user()
     user.set_google_tokens("expired_token", "valid_refresh_token", expires_in=-10)
 

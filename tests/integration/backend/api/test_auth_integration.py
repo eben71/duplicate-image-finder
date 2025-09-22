@@ -1,27 +1,26 @@
 from unittest import mock
 
-import pytest
 import httpx
+import pytest
 from httpx import AsyncClient
 from sqlmodel import Session
 
+from backend.api import routes as api_routes
+from core import google_oauth
+
 # Constants for readability and maintainability
 FAKE_CODE = "fakecode"
-TOKEN_RESPONSE = {
+TOKEN_RESPONSE: dict[str, str | int] = {
     "access_token": "abc123",
     "refresh_token": "refresh456",
     "expires_in": 3600,
 }
 
-USERINFO_RESPONSE = {
+USERINFO_RESPONSE: dict[str, str] = {
     "email": "testuser@example.com",
     "full_name": "Test User",
     "profile_picture": "https://example.com/pic.jpg",
 }
-
-from backend.api import routes as api_routes
-from backend.config.settings import settings
-from core import google_oauth
 
 
 @pytest.mark.asyncio
@@ -40,10 +39,16 @@ async def test_auth_callback_creates_user(
         client: Test client (e.g., from FastAPI TestClient)
         mocker: Pytest fixture for additional mocking if needed
     """
-    async def fake_exchange(code: str, client: AsyncClient) -> dict:
+
+    async def fake_exchange(code: str, client: AsyncClient) -> dict[str, str | int]:
         return TOKEN_RESPONSE
 
-    async def fake_get(self, url: str, *, headers: dict | None = None) -> mock.Mock:
+    async def fake_get(
+        self: httpx.AsyncClient,
+        url: str,
+        *,
+        headers: dict[str, str] | None = None,
+    ) -> mock.Mock:
         response = mock.Mock(status_code=200)
         response.json = mock.Mock(return_value=USERINFO_RESPONSE)
         response.raise_for_status = mock.Mock()
@@ -70,7 +75,7 @@ async def test_auth_callback_creates_user(
 async def test_auth_callback_handles_invalid_code(
     app_client: AsyncClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    async def fake_exchange(*_: object, **__: object) -> dict:
+    async def fake_exchange(*_: object, **__: object) -> dict[str, str | int]:
         raise ValueError("Invalid code")
 
     monkeypatch.setattr(api_routes, "exchange_code_for_token", fake_exchange)

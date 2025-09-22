@@ -1,3 +1,5 @@
+from types import TracebackType
+
 import pytest
 
 from backend.db import session as session_module
@@ -15,7 +17,12 @@ def test_get_session_uses_context_manager(monkeypatch: pytest.MonkeyPatch) -> No
             events.append("enter")
             return self
 
-        def __exit__(self, exc_type, exc, tb) -> None:
+        def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc: BaseException | None,
+            tb: TracebackType | None,
+        ) -> None:
             events.append("exit")
 
     monkeypatch.setattr(session_module, "Session", DummySession)
