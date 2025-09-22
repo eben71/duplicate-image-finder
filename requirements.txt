@@ -2,7 +2,7 @@ alembic==1.16.5
 celery==5.5.3
 cryptography==45.0.7
 email-validator==2.3.0
-fastapi==0.116.1
+fastapi==0.117.1
 httpx==0.28.1
 ImageHash==4.3.2
 numpy==2.1.2
@@ -15,5 +15,5 @@ python-dotenv==1.1.1
 redis==5.3.1
 scikit-image==0.24.0
 SQLAlchemy==2.0.43
-sqlmodel==0.0.24
-uvicorn==0.35.0
+sqlmodel==0.0.25
+uvicorn==0.36.0
