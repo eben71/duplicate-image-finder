@@ -175,7 +175,15 @@ def pytest_fixture_setup(
 
     func = fixturedef.func
 
-    if inspect.isasyncgenfunction(func):
+    try:
+        is_asyncgen = inspect.isasyncgenfunction(func)
+    except OSError:
+        # Under Python 3.12 the inspect helpers can raise when a fixture is defined
+        # from a C-implemented wrapper (e.g. when coverage wraps callables). Treat
+        # it as a regular function and let pytest handle it normally.
+        is_asyncgen = False
+
+    if is_asyncgen:
         loop = cast(asyncio.AbstractEventLoop, request.getfixturevalue("event_loop"))
         argnames = fixturedef.argnames or ()
 
@@ -197,7 +205,14 @@ def pytest_fixture_setup(
         fixturedef.cached_result = (value, fixturedef.cache_key(cast(Any, request)), None)
         return value
 
-    if inspect.iscoroutinefunction(func):
+    try:
+        is_coro = inspect.iscoroutinefunction(func)
+    except OSError:
+        # Coverage/async fixtures may lack retrievable source code; assume they
+        # are sync so pytest can fall back to its default handling.
+        is_coro = False
+
+    if is_coro:
         loop = cast(asyncio.AbstractEventLoop, request.getfixturevalue("event_loop"))
         argnames = fixturedef.argnames or ()
 
