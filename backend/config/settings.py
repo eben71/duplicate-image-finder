@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import no_type_check
@@ -56,7 +57,10 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return a validated Settings instance or exit with a helpful message."""
     try:
-        settings = Settings()  # pulls values from env and `.env` automatically
+        env_file = (
+            None if "PYTEST_CURRENT_TEST" in os.environ else Settings.model_config.get("env_file")
+        )
+        settings = Settings(_env_file=env_file)
         # Validate required fields
         settings.require_env("DATABASE_URL")
         settings.require_env("CELERY_BROKER_URL")

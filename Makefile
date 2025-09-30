@@ -11,10 +11,10 @@ PYTHON := python3.12
 PIP := $(PYTHON) -m pip
 
 .PHONY: build up down restart logs health \
-        reset-db init-db alembic migrate shell celery \
-        tests-unit tests-int tests-debug tests-all tests \
-        install-deps install-dev-deps check-versions \
-        format lint typecheck ci update-python repomix
+	reset-db init-db alembic migrate shell celery \
+    tests-unit tests-int tests-debug tests-smoke tests-all tests tests-coverage \
+    install-deps install-dev-deps check-versions \
+    format lint typecheck ci update-python repomix
 
 # ---------- Docker: App Lifecycle ----------
 build:
@@ -63,10 +63,14 @@ celery:
 # ---------- Tests ----------
 # Fast unit tests (no docker). Pytest default markers from pytest.ini apply.
 tests-unit:
-	$(ACTIVATE); pytest
+	$(ACTIVATE); pytest -m "not integration and not e2e and not debug"
 
 # Integration tests via your existing compose recipe
-tests-int: tests
+tests-int:
+	docker compose up -d db
+	docker compose exec -T db sh -c "while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done"
+	docker compose run --rm app pytest tests --cov=backend --cov=frontend --disable-warnings
+	docker compose stop db
 
 # Debug-only tests (override default filter)
 tests-debug:
@@ -76,17 +80,17 @@ tests-debug:
 tests-smoke:
 	$(ACTIVATE); pytest -m smoke -s -vv
 
-# Run unit (non-integration/e2e/debug) then integration
+# Run the full suite (unit + integration)
 tests-all:
-	$(ACTIVATE); pytest -m "not integration and not e2e and not debug"
-	$(ACTIVATE); pytest -m integration
+	$(MAKE) tests-unit
+	$(MAKE) tests-int
 
-# Your existing integration recipe (kept intact)
-tests:
-	docker compose up -d db
-	docker compose exec -T db sh -c "while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done"
-	docker compose run --rm app pytest tests --cov=backend --cov=frontend --disable-warnings
-	docker compose stop db
+# Coverage across backend/core/frontend modules
+tests-coverage:
+	$(ACTIVATE); pytest -m "not e2e and not debug" --cov=backend --cov=core --cov=frontend --cov-report=term-missing --disable-warnings
+
+# Backwards-compatible alias expected by CI/docs
+tests: tests-coverage
 
 # ---------- Local deps (optional venv) ----------
 install-deps:
