@@ -87,7 +87,7 @@ tests-all:
 
 # Coverage across backend/core/frontend modules
 tests-coverage:
-    $(ACTIVATE); pytest -m "not e2e and not debug" --cov=backend --cov=core --cov=frontend --cov-report=term-missing --disable-warnings
+	$(ACTIVATE); pytest -m "not e2e and not debug" --cov=backend --cov=core --cov=frontend --cov-report=term-missing --disable-warnings
 
 # Backwards-compatible alias expected by CI/docs
 tests: tests-coverage
