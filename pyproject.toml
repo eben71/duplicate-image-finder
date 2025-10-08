@@ -13,9 +13,9 @@ ignore = []
 
 [tool.coverage.run]
 branch = true
-source = ["backend"]
+source = ["backend", "core", "frontend"]
 
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
-fail_under = 85
+fail_under = 80
