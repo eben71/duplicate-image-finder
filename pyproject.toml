@@ -15,6 +15,21 @@ ignore = []
 branch = true
 source = ["backend", "core", "frontend"]
 
+[tool.coverage.paths]
+backend = [
+  "backend",
+  "/app/backend",
+]
+core = [
+  "core",
+  "/app/core",
+]
+# If you have Python code under frontend/, add:
+# frontend = [
+#   "frontend",
+#   "/app/frontend",
+# ]
+
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
