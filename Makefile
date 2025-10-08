@@ -8,7 +8,9 @@ VENV_DIR ?= .venv
 # Activate venv only if it exists (safe no-op in CI)
 ACTIVATE := if [ -f "$(VENV_DIR)/bin/activate" ]; then . "$(VENV_DIR)/bin/activate"; fi
 PYTHON := python3.12
+PY ?= python3
 PIP := $(PYTHON) -m pip
+COV = $(PY) -m coverage
 
 .PHONY: build up down restart logs health \
 	reset-db init-db alembic migrate shell celery \
@@ -86,11 +88,30 @@ tests-all:
 	$(MAKE) tests-int
 
 # Coverage across backend/core/frontend modules
-tests-coverage:
-	$(ACTIVATE); pytest -m "not e2e and not debug" --cov=backend --cov=core --cov=frontend --cov-report=term-missing --disable-warnings
+tests-unit-cov:
+	# Write raw DB as .coverage.unit and an XML for inspection
+	COVERAGE_FILE=.coverage.unit $(COV) erase
+	COVERAGE_FILE=.coverage.unit pytest -q \
+		--cov=backend --cov=core \
+		--cov-report=xml:coverage.unit.xml
 
-# Backwards-compatible alias expected by CI/docs
-tests: tests-coverage
+tests-int-cov:
+	docker compose up -d db
+	docker compose exec -T db sh -c 'while ! pg_isready -U postgres -d duplicatefinder; do sleep 1; done'
+	# Ensure the app container has pytest-cov + coverage installed and the repo is mounted at /app
+	docker compose run --rm \
+		-e COVERAGE_FILE=.coverage.integration \
+		app pytest -m integration --disable-warnings \
+			--cov=backend --cov=core \
+			--cov-report=xml:coverage.integration.xml
+	docker compose stop db
+
+tests-coverage-merge:
+	# Combine RAW DBs, then produce total XML + console report
+	$(COV) erase
+	$(COV) combine .coverage.unit .coverage.integration
+	$(COV) xml -o coverage.total.xml
+	$(COV) report -m
 
 # ---------- Local deps (optional venv) ----------
 install-deps:

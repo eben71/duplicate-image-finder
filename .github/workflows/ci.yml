@@ -32,23 +32,35 @@ jobs:
     needs: [lint]
     env:
       ENCRYPTION_KEY: dummy-32-byte-key-for-tests-only
+      COVERAGE_FILE: .coverage.unit
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/python-setup
         with:
           python-version: "3.12"
+
       - name: Generate ENCRYPTION_KEY (optional)
         run: |
           python - <<'PY' >> $GITHUB_ENV
           from cryptography.fernet import Fernet
           print("ENCRYPTION_KEY=" + Fernet.generate_key().decode())
           PY
+
       - name: Run unit tests (and mypy/flake via Makefile)
-        run: make ci
+        run: |
+          coverage erase
+          make ci
+          # ensure XML exists (make ci should have produced coverage.xml)
+          test -f coverage.xml || coverage xml -o coverage.xml
+
       - name: Coverage summary
         run: coverage report -m || true
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload unit coverage artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: coverage.xml
-          if-no-files-found: ignore
+          name: unit-coverage
+          path: |
+            .coverage.unit
+            coverage.xml
+          if-no-files-found: error

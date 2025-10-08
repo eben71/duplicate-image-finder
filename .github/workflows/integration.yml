@@ -97,9 +97,42 @@ jobs:
           docker compose logs app
           exit 1
 
-      - name: Run integration pytest
-        run: docker compose run --rm app pytest -m integration --disable-warnings
+      - name: Run integration pytest with coverage
+        run: |
+          # Coverage DB written as .coverage.integration (stays in repo root via volume mount)
+          docker compose run --rm \
+            -e COVERAGE_FILE=.coverage.integration \
+            app pytest -m integration --disable-warnings \
+              --cov=backend --cov=core \
+              --cov-report=xml:coverage.integration.xml
 
       - name: Stop services
         if: always()
         run: docker compose down -v
+
+      - name: Upload integration coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-coverage
+          path: |
+            .coverage.integration
+            coverage.integration.xml
+          if-no-files-found: error
+
+      - name: Merge coverage (unit + integration) and enforce threshold
+        # If you prefer truly "total only", uncomment the 'always' and run unit here too.
+        run: |
+          python -m pip install coverage
+          # If a unit artifact exists from a previous step/workflow, great; otherwise reuse integration only.
+          # We'll combine whatever files exist.
+          ls -la .coverage* || true
+          coverage combine || true
+          coverage xml -o coverage.total.xml
+          coverage report -m  # uses fail_under=nn from pyproject.toml
+      - name: Upload total coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-coverage
+          path: coverage.total.xml
+          if-no-files-found: warn
