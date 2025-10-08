@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: .github/actions/python-setup
+      - uses: ./.github/actions/python-setup
         with:
           python-version: "3.12"
       - run: pip list
@@ -35,7 +35,7 @@ jobs:
       COVERAGE_FILE: .coverage.unit
     steps:
       - uses: actions/checkout@v4
-      - uses: .github/actions/python-setup
+      - uses: ./.github/actions/python-setup
         with:
           python-version: "3.12"
 
