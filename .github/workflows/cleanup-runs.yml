@@ -10,16 +10,14 @@ permissions:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Ensure GitHub CLI is available
         run: gh --version || (sudo apt-get update && sudo apt-get install -y gh && gh --version)
 
-      - name: Authenticate gh with workflow token
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "$GITHUB_TOKEN" | gh auth login --with-token
-          gh auth status
+      - name: Verify gh authentication
+        run: gh auth status
 
       - name: Collect candidate run IDs (non-main, completed)
         env:
