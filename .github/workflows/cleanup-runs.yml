@@ -19,7 +19,7 @@ jobs:
       - name: Verify gh authentication
         run: gh auth status
 
-      - name: Collect candidate run IDs (non-main, completed)
+      - name: Collect candidate run IDs (completed, per workflow/branch)
         env:
           REPO: ${{ github.repository }}
         run: |
@@ -27,11 +27,12 @@ jobs:
           gh run list \
             --repo "$REPO" \
             --limit 1000 \
-            --json databaseId,headBranch,createdAt,status \
+            --json databaseId,headBranch,createdAt,status,workflowName \
           | jq -r --argjson keep "$N" '
-              map(select(.headBranch != "main" and .headBranch != null and .status == "completed"))
-            | group_by(.headBranch)[]
-            | sort_by(.createdAt) | reverse
+              map(select(.status == "completed"))
+            | sort_by([.workflowName, .headBranch // "", .createdAt])
+            | group_by({workflow: .workflowName, branch: (.headBranch // "__default__")})[]
+            | reverse                                     # newest first
             | if length > $keep then .[$keep:] else [] end  # drop the newest keep, delete the rest
             | .[].databaseId' \
           | tee run_ids.txt
