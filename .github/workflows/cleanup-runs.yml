@@ -30,11 +30,11 @@ jobs:
             --repo "$REPO" \
             --limit 1000 \
             --json databaseId,headBranch,createdAt,status \
-          | jq --argjson N "$N" -r '
+          | jq -r '
               map(select(.headBranch != "main" and .headBranch != null and .status == "completed"))
             | group_by(.headBranch)[]
             | sort_by(.createdAt) | reverse
-            | .[($N):]  # drop the newest N, keep the older ones (to delete)
+            | .[N:]  # drop the newest N, keep the older ones (to delete)
             | .[].databaseId' \
           | tee run_ids.txt
 

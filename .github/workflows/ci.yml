@@ -49,9 +49,9 @@ jobs:
       - name: Run unit tests (and mypy/flake via Makefile)
         run: |
           coverage erase
-          coverage run -m pytest
           make ci
-          coverage xml -o coverage.xml
+          # ensure XML exists (make ci should have produced coverage.xml)
+          test -f coverage.xml || coverage xml -o coverage.xml
 
       - name: Coverage summary
         run: coverage report -m || true
