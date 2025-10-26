@@ -10,6 +10,7 @@ export default defineConfig({
     globals: true,
     css: true,
     coverage: {
+      provider: "v8",
       reporter: ["text", "json", "json-summary", "lcov", "html"],
       reportsDirectory: "../coverage/frontend",
       include: ["components/**/*.{ts,tsx}", "app/**/*.{ts,tsx}"]
