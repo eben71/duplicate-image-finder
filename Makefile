@@ -5,6 +5,8 @@
 
 # ---------- Config ----------
 VENV_DIR ?= .venv
+FRONTEND_DIR ?= frontend
+NPM ?= npm
 # Activate venv only if it exists (safe no-op in CI)
 ACTIVATE := if [ -f "$(VENV_DIR)/bin/activate" ]; then . "$(VENV_DIR)/bin/activate"; fi
 PYTHON := python3.12
@@ -13,10 +15,11 @@ PIP := $(PYTHON) -m pip
 COV = $(PY) -m coverage
 
 .PHONY: build up down restart logs health \
-	reset-db init-db alembic migrate shell celery \
+        reset-db init-db alembic migrate shell celery \
     tests-unit tests-int tests-debug tests-smoke tests-all tests tests-coverage \
     install-deps install-dev-deps check-versions \
-    format lint typecheck ci update-python repomix
+    format lint typecheck ci update-python repomix \
+    frontend-install frontend-dev frontend-test frontend-storybook frontend-coverage
 
 # ---------- Docker: App Lifecycle ----------
 build:
@@ -112,6 +115,7 @@ tests-coverage-merge:
 	$(COV) combine .coverage.unit .coverage.integration
 	$(COV) xml -o coverage.total.xml
 	$(COV) report -m
+	$(MAKE) frontend-coverage
 
 # ---------- Local deps (optional venv) ----------
 install-deps:
@@ -162,3 +166,22 @@ update-python:
 
 repomix:
 	npx repomix
+
+# ---------- Frontend (Next.js) ----------
+.PHONY: frontend-install frontend-dev frontend-test frontend-storybook frontend-coverage
+
+frontend-install:
+	cd $(FRONTEND_DIR) && $(NPM) install
+
+frontend-dev:
+	cd $(FRONTEND_DIR) && $(NPM) run dev
+
+frontend-test:
+	cd $(FRONTEND_DIR) && $(NPM) run test
+
+frontend-storybook:
+	cd $(FRONTEND_DIR) && $(NPM) run storybook
+
+frontend-coverage:
+	cd $(FRONTEND_DIR) && $(NPM) run test:coverage
+	cp -f coverage/frontend/coverage-summary.json coverage.frontend.vitest-summary.json
