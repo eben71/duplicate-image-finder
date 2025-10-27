@@ -1,12 +1,13 @@
-import "../styles/globals.css";
-import ThemeProvider from "@theme/ThemeProvider";
-import Sidebar from "@layout/Sidebar";
+import type { ReactNode } from "react";
+import "./globals.css";
 import HeaderBar from "@layout/HeaderBar";
+import Sidebar from "@layout/Sidebar";
+import ThemeProvider from "@theme/ThemeProvider";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body className="min-h-screen">
         <ThemeProvider>
           <HeaderBar />
           <div className="container-max px-4 flex flex-col md:flex-row md:gap-6">

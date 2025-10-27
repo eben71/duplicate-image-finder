@@ -6,6 +6,7 @@ import { formatNumber } from "@lib/formatters";
 export default function Dashboard() {
   return (
     <div className="grid gap-6">
+      <h1 className="text-3xl font-semibold">Duplicate Image Finder</h1>
       <div className="grid md:grid-cols-3 gap-4">
         <Card>
           <div className="text-sm text-[var(--color-text-secondary)]">Photos Scanned</div>
