@@ -2,11 +2,11 @@
 
 # Duplicate Image Finder Backend (FastAPI + Celery + Redis + Postgres)
 
-This is a modular backend stack for a SaaS application that identifies duplicate or similar images using AI. It includes a FastAPI backend, background processing with Celery, and a per-user OAuth2 integration with Google Photos for secure, API-based image ingestion. The system is designed for scalability, user isolation, and efficient image analysis with CLIP, YOLO, and perceptual hashing. It supports containerized development with Docker, automated CI/CD, and a robust testing suite.
+This is a modular backend + frontend stack for a SaaS application that identifies duplicate or similar images using AI. It includes a FastAPI backend, background processing with Celery, a per-user OAuth2 integration with Google Photos for secure, API-based image ingestion, and a Next.js 15 + React 19 App Router frontend. The system is designed for scalability, user isolation, and efficient image analysis with CLIP, YOLO, and perceptual hashing. It supports containerized development with Docker, automated CI/CD, and a robust testing suite for both the API and the web client.
 
 ## 🔧 Tech Stack
 
-- **FastAPI**: Backend API (`/api`-prefixed endpoints) and lightweight frontend
+- **FastAPI**: Backend API (`/api`-prefixed endpoints)
 - **Celery + Redis**: Background processing for image embeddings
 - **PostgreSQL**: Stores users, image metadata, embeddings
 - **Docker + Docker Compose**: Containerized development and CI-ready environment
@@ -22,7 +22,7 @@ This is a modular backend stack for a SaaS application that identifies duplicate
 - **Duplicate Detection**: Generates embeddings for images to identify duplicates
 - **Scalable Architecture**: Uses Celery for asynchronous tasks and Redis for task queuing
 - **CI/CD Integration**: Automated testing, linting, and dependency management via GitHub Actions
-- **Frontend**: Basic HTML welcome page served by FastAPI
+- **Frontend**: Next.js 15 App Router UI (React 19, Tailwind CSS, Storybook 8, Vitest 2, Playwright)
 
 ---
 
@@ -32,7 +32,8 @@ This is a modular backend stack for a SaaS application that identifies duplicate
 
 - **Docker** and **Docker Compose** for running services
 - **Python 3.12** for local development (optional)
-- **Make** for running commands (optional, can run Docker commands directly)
+- **Node.js 20.10+** with **Corepack** enabled (`corepack enable`) for pnpm tooling
+- **Make** for running commands (optional, can run Docker/pnpm commands directly)
 
 ### 1. Clone the Repository
 
@@ -64,7 +65,7 @@ make up
 This starts the following services:
 
 - **Backend API**: http://localhost:8000/docs
-- **Frontend UI**: http://localhost:3000
+- **Frontend UI (Next.js)**: http://localhost:3000
 - **PostgreSQL**: Port `5432`
 - **Redis**: Port `6379`
 - **Celery Worker**: Background task processing
@@ -101,6 +102,21 @@ make migrate
 | `make install-dev-deps` | Install development dependencies (requires venv)      |
 | `make repomix`          | Generate a flattened repo summary                     |
 
+### Frontend (Next.js) commands
+
+The web client lives in `frontend/` and now uses pnpm 9 with Next.js 15, React 19, TypeScript 5.6, Tailwind CSS 3.4, Storybook 8, Vitest 2, and Playwright 1.48.
+
+| Command | Description |
+| ------- | ----------- |
+| `make frontend-install` | Install dependencies with pnpm (ensure `corepack enable` first). |
+| `make frontend-dev` | Start the Next.js dev server on port 3000. |
+| `make frontend-test` | Run unit tests with Vitest. |
+| `make frontend-coverage` | Run Vitest with coverage output. |
+| `make frontend-storybook` | Launch Storybook 8 on port 6006. |
+| `pnpm --dir frontend test:e2e` | Run Playwright smoke tests (requires `pnpm dev` running separately). |
+
+> **Tip:** The frontend `package.json` is configured with `"packageManager": "pnpm@9.0.0"`. If Corepack cannot download pnpm due to network policy, install pnpm 9 manually and ensure it is on your PATH.
+
 ---
 
 ## 🧪 Testing
@@ -117,6 +133,7 @@ This executes `pytest` with coverage in the `app` container. Tests are located i
 - **Models** (`tests/backend/models/`)
 - **Services** (`tests/backend/services/`)
 - **Web scraper** (`tests/backend/backend_scraper/`)
+- **Frontend** (`frontend/`) – Vitest, Storybook, and Playwright coverage for the Next.js application
 
 Dependencies: `pytest`, `pytest-asyncio`, `pytest-cov`.
 
@@ -136,7 +153,7 @@ Dependencies: `pytest`, `pytest-asyncio`, `pytest-cov`.
 │   ├── models/               # SQLModel ORM (User, Image, Embedding)
 │   ├── services/             # Business logic and Celery
 │   └── main.py               # FastAPI entrypoint
-├── frontend/                 # Uvicorn-hosted welcome page
+├── frontend/                 # Next.js 15 App Router frontend (pnpm workspace)
 ├── tests/                    # Pytest suite
 ├── .github/                  # CI workflows, dependabot, reviewers
 ├── docker-compose.yml
@@ -164,7 +181,7 @@ The project uses GitHub Actions for continuous integration, defined in `.github/
 - **CI Pipeline** (`ci.yaml`): Runs linting, testing, and Alembic migration checks on push/pull requests to `main`.
 - **Dependabot** (`assign-reviewers.yml`): Automatically assigns reviewers to Dependabot PRs for dependency updates.
 
-Dependencies are updated weekly via Dependabot, configured in `.github/dependabot.yml`.
+Dependencies are updated weekly via Dependabot, configured in `.github/dependabot.yml`. When adding frontend CI, pin Node.js 20.x and use pnpm/action-setup@v4 (or enable Corepack) so builds match local tooling.
 
 ---
 

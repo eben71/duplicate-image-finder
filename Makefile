@@ -6,7 +6,7 @@
 # ---------- Config ----------
 VENV_DIR ?= .venv
 FRONTEND_DIR ?= frontend
-NPM ?= npm
+PNPM ?= pnpm
 # Activate venv only if it exists (safe no-op in CI)
 ACTIVATE := if [ -f "$(VENV_DIR)/bin/activate" ]; then . "$(VENV_DIR)/bin/activate"; fi
 PYTHON := python3.12
@@ -171,17 +171,17 @@ repomix:
 .PHONY: frontend-install frontend-dev frontend-test frontend-storybook frontend-coverage
 
 frontend-install:
-	cd $(FRONTEND_DIR) && $(NPM) install
+	cd $(FRONTEND_DIR) && $(PNPM) install
 
 frontend-dev:
-	cd $(FRONTEND_DIR) && $(NPM) run dev
+	cd $(FRONTEND_DIR) && $(PNPM) run dev
 
 frontend-test:
-	cd $(FRONTEND_DIR) && $(NPM) run test
+	cd $(FRONTEND_DIR) && $(PNPM) run test
 
 frontend-storybook:
-	cd $(FRONTEND_DIR) && $(NPM) run storybook
+	cd $(FRONTEND_DIR) && $(PNPM) run storybook
 
 frontend-coverage:
-	cd $(FRONTEND_DIR) && $(NPM) run test:coverage
+	cd $(FRONTEND_DIR) && $(PNPM) run test:coverage
 	cp -f coverage/frontend/coverage-summary.json coverage.frontend.vitest-summary.json
