@@ -1,3 +1,3 @@
-from .session import engine
+from .session import SessionLocal, engine
 
-__all__ = ["engine"]
+__all__ = ["engine", "SessionLocal"]

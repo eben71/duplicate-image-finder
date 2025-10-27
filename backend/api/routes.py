@@ -1,19 +1,31 @@
 import logging
+from functools import lru_cache
 from typing import Annotated, Any
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from sqlmodel import Session, select
 from starlette.responses import RedirectResponse
 
 from backend.config.settings import settings
-from backend.db.session import get_session
+from backend.db.session import SessionLocal, get_session
 from backend.deps import get_http_client
 from backend.models.enums import IngestionMode
 from backend.models.schemas.user import UserRead
 from backend.models.user import User
 from backend.services.ingestion.google_photos import fetch_images_by_year
+from backend.services.vector import VectorStore
+from backend.services.embeddings import SigLIP2Encoder
+from backend.services.dedupe import DedupePipeline, PDQFilter
+from backend.models.media_item import MediaItem
 from core.google_oauth import exchange_code_for_token, get_google_auth_url
+
+try:  # pragma: no cover - optional dependency
+    import multipart  # type: ignore
+
+    HAS_MULTIPART = True
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    HAS_MULTIPART = False
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -159,3 +171,70 @@ async def ingest_photos_for_dev(
         "total_images": len(images),
         "sample": images[:3],  # return first 3 images for preview
     }
+
+
+@lru_cache()
+def get_siglip2_encoder() -> SigLIP2Encoder:
+    return SigLIP2Encoder()
+
+
+@lru_cache()
+def get_vector_store() -> VectorStore:
+    return VectorStore(session_factory=SessionLocal)
+
+
+if HAS_MULTIPART:
+
+    @api_router.post("/ingest/media/{media_item_id}/embed", response_model=dict[str, Any])
+    async def embed_media_item(
+        media_item_id: int,
+        session: Annotated[Session, Depends(get_session)],
+        file: UploadFile = File(...),
+    ) -> dict[str, Any]:
+        media_item = session.get(MediaItem, media_item_id)
+        if media_item is None:
+            raise HTTPException(status_code=404, detail="Media item not found")
+
+        payload = await file.read()
+        if not payload:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+        pdq_filter = PDQFilter(method="auto")
+        pdq_hash, quality, method = pdq_filter.compute_hash(payload)
+
+        encoder = get_siglip2_encoder()
+        embedding = encoder.embed_bytes(payload)
+
+        vector_store = get_vector_store()
+        vector_store.upsert_embedding(media_item_id=media_item_id, embedding=embedding, pdq_hash=pdq_hash)
+
+        return {
+            "status": "ok",
+            "pdq_hash": pdq_hash,
+            "pdq_quality": quality,
+            "pdq_method": method,
+            "embedding_dim": len(embedding),
+        }
+
+
+    @api_router.post("/dedupe/search/{user_id}", response_model=dict[str, Any])
+    async def dedupe_search(
+        user_id: int,
+        session: Annotated[Session, Depends(get_session)],
+        file: UploadFile = File(...),
+    ) -> dict[str, Any]:
+        user = session.get(User, user_id)
+        if user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        payload = await file.read()
+        if not payload:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+        pipeline = DedupePipeline(vector_store=get_vector_store(), encoder=get_siglip2_encoder())
+        matches = pipeline.find_candidates(payload, user_id=user_id)
+        return {"results": matches}
+else:  # pragma: no cover - optional dependency guard
+    logger.warning(
+        "python-multipart is not installed; media upload and dedupe endpoints are disabled.",
+    )
