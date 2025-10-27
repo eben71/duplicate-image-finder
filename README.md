@@ -39,7 +39,7 @@ This is a modular backend + frontend stack for a SaaS application that identifie
 
 ```bash
 git clone <repo-url>
-cd duplicate-image-finder-backend
+cd duplicate-image-finder
 ```
 
 ### 2. Set Up Environment Variables
@@ -110,10 +110,12 @@ The web client lives in `frontend/` and now uses pnpm 9 with Next.js 15, React 1
 | ------- | ----------- |
 | `make frontend-install` | Install dependencies with pnpm (ensure `corepack enable` first). |
 | `make frontend-dev` | Start the Next.js dev server on port 3000. |
+| `make frontend-lint` | Run ESLint with the Next.js shareable config. |
+| `make frontend-typecheck` | Execute `tsc --noEmit` for strict type coverage. |
 | `make frontend-test` | Run unit tests with Vitest. |
 | `make frontend-coverage` | Run Vitest with coverage output. |
 | `make frontend-storybook` | Launch Storybook 8 on port 6006. |
-| `pnpm --dir frontend test:e2e` | Run Playwright smoke tests (requires `pnpm dev` running separately). |
+| `make frontend-e2e` | Run Playwright smoke tests (requires `make frontend-dev` running separately). |
 
 > **Tip:** The frontend `package.json` is configured with `"packageManager": "pnpm@9.0.0"`. If Corepack cannot download pnpm due to network policy, install pnpm 9 manually and ensure it is on your PATH.
 

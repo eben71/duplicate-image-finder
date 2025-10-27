@@ -168,7 +168,8 @@ repomix:
 	npx repomix
 
 # ---------- Frontend (Next.js) ----------
-.PHONY: frontend-install frontend-dev frontend-test frontend-storybook frontend-coverage
+.PHONY: frontend-install frontend-dev frontend-test frontend-storybook frontend-coverage \
+        frontend-lint frontend-typecheck frontend-e2e
 
 frontend-install:
 	cd $(FRONTEND_DIR) && $(PNPM) install
@@ -177,11 +178,20 @@ frontend-dev:
 	cd $(FRONTEND_DIR) && $(PNPM) run dev
 
 frontend-test:
-	cd $(FRONTEND_DIR) && $(PNPM) run test
+        cd $(FRONTEND_DIR) && $(PNPM) run test
 
 frontend-storybook:
-	cd $(FRONTEND_DIR) && $(PNPM) run storybook
+        cd $(FRONTEND_DIR) && $(PNPM) run storybook
 
 frontend-coverage:
-	cd $(FRONTEND_DIR) && $(PNPM) run test:coverage
-	cp -f coverage/frontend/coverage-summary.json coverage.frontend.vitest-summary.json
+        cd $(FRONTEND_DIR) && $(PNPM) run test:coverage
+        cp -f coverage/frontend/coverage-summary.json coverage.frontend.vitest-summary.json
+
+frontend-lint:
+        cd $(FRONTEND_DIR) && $(PNPM) run lint
+
+frontend-typecheck:
+        cd $(FRONTEND_DIR) && $(PNPM) run typecheck
+
+frontend-e2e:
+        cd $(FRONTEND_DIR) && $(PNPM) run test:e2e
