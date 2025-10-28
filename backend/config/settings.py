@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import no_type_check
 
 from pydantic import Field, ValidationError
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -37,11 +37,11 @@ class Settings(BaseSettings):
     LOG_LEVEL: int = logging.DEBUG
 
     # Pydantic v2 config
-    model_config = {
-        "env_file": ".env",
-        "env_file_encoding": "utf-8",
-        "case_sensitive": False,
-    }
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
 
     def require_env(self, var_name: str) -> str:
         """
