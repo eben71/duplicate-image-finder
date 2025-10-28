@@ -8,17 +8,23 @@ from typing import Any, cast
 from PIL import Image
 
 try:  # pragma: no cover - optional dependency
-    from transformers import AutoModel, AutoProcessor  # type: ignore
+    from transformers import AutoModel as _AutoModel  # type: ignore
+    from transformers import AutoProcessor as _AutoProcessor
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
-    AutoModel = None  # type: ignore[assignment]
-    AutoProcessor = None  # type: ignore[assignment]
+    _AutoModel = None  # type: ignore[assignment]
+    _AutoProcessor = None  # type: ignore[assignment]
+
+AutoModel = cast(Any, _AutoModel)
+AutoProcessor = cast(Any, _AutoProcessor)
 
 _DEFAULT_MODEL_NAME = "google/siglip-base-patch16-224"
 
 try:  # pragma: no cover - optional dependency
-    import torch  # type: ignore
+    import torch as _torch  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
-    torch = None  # type: ignore[assignment]
+    _torch = None  # type: ignore[assignment]
+
+torch = cast(Any, _torch)
 
 
 class SigLIP2Encoder:
@@ -64,7 +70,6 @@ class SigLIP2Encoder:
         if torch is None:
             raise RuntimeError("PyTorch is required to compute embeddings.")
 
-        @torch.no_grad()
         def _forward() -> list[float]:
             batch = self.processor(images=img, return_tensors="pt")
             batch = self._move_to_device(batch)
@@ -91,7 +96,8 @@ class SigLIP2Encoder:
             vector = torch.nn.functional.normalize(vector, p=2, dim=-1)
             return vector[0].detach().cpu().tolist()
 
-        return _forward()
+        with torch.no_grad():
+            return _forward()
 
     def _move_to_device(self, inputs: Any) -> Any:
         if torch is not None and hasattr(inputs, "to"):

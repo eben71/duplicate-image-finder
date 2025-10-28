@@ -6,7 +6,7 @@ from collections.abc import Callable, Sequence
 from math import sqrt
 from typing import Any
 
-from sqlalchemy import func, select, text
+from sqlalchemy import ColumnElement, Table, func, select, text
 from sqlmodel import Session
 
 from backend.models.media_item import MediaItem
@@ -53,17 +53,20 @@ class VectorStore:
                     top_k=top_k,
                 )
 
+            table: Table = MediaItem.__table__  # type: ignore[attr-defined]
+            embedding_col: ColumnElement[Any] = table.c.embedding
+
             query = (
                 select(
-                    MediaItem.id,
-                    MediaItem.filename,
-                    MediaItem.base_url,
-                    MediaItem.mime_type,
-                    MediaItem.creation_time,
-                    (1 - func.cosine_distance(MediaItem.embedding, vector)).label("similarity"),
+                    table.c.id,
+                    table.c.filename,
+                    table.c.base_url,
+                    table.c.mime_type,
+                    table.c.creation_time,
+                    (1 - func.cosine_distance(embedding_col, vector)).label("similarity"),
                 )
-                .where(MediaItem.user_id == user_id)
-                .where(MediaItem.embedding.is_not(None))
+                .where(table.c.user_id == user_id)
+                .where(embedding_col.isnot(None))
                 .order_by(text("similarity DESC"))
                 .limit(top_k)
             )
@@ -93,11 +96,10 @@ class VectorStore:
         user_id: int,
         top_k: int,
     ) -> list[dict[str, Any]]:
-        query = (
-            select(MediaItem)
-            .where(MediaItem.user_id == user_id)
-            .where(MediaItem.embedding.is_not(None))
-        )
+        table: Table = MediaItem.__table__  # type: ignore[attr-defined]
+        embedding_col: ColumnElement[Any] = table.c.embedding
+
+        query = select(MediaItem).where(table.c.user_id == user_id).where(embedding_col.isnot(None))
         items = session.execute(query).scalars().all()
 
         scored: list[dict[str, Any]] = []
@@ -136,18 +138,20 @@ class VectorStore:
         return dot / (norm_a * norm_b)
 
     def fetch_pdq_candidates(self, user_id: int, limit: int = 200) -> list[dict[str, Any]]:
+        table: Table = MediaItem.__table__  # type: ignore[attr-defined]
+
         with self._session_factory() as session:
             query = (
                 select(
-                    MediaItem.id,
-                    MediaItem.filename,
-                    MediaItem.base_url,
-                    MediaItem.pdq_hash,
-                    MediaItem.creation_time,
+                    table.c.id,
+                    table.c.filename,
+                    table.c.base_url,
+                    table.c.pdq_hash,
+                    table.c.creation_time,
                 )
-                .where(MediaItem.user_id == user_id)
-                .where(MediaItem.pdq_hash.is_not(None))
-                .order_by(MediaItem.creation_time.desc())
+                .where(table.c.user_id == user_id)
+                .where(table.c.pdq_hash.isnot(None))
+                .order_by(table.c.creation_time.desc())
                 .limit(limit)
             )
 

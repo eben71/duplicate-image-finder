@@ -61,8 +61,8 @@ class PDQFilter:
     def compute_hash(self, image_bytes: bytes) -> tuple[str, int | None, str]:
         """Return ``(hash_hex, quality_or_none, backend_used)``."""
 
-        img = Image.open(io.BytesIO(image_bytes))
-        img = img.convert("RGB")
+        with Image.open(io.BytesIO(image_bytes)) as pil_image:
+            img: Image.Image = pil_image.convert("RGB")
 
         wants_pdq = self.method == "pdq" or (self.method == "auto" and HAS_PDQ)
         if wants_pdq:

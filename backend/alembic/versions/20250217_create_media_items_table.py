@@ -1,19 +1,29 @@
 """create media items table and vector index"""
 
+from typing import TYPE_CHECKING, Any
+
 import sqlalchemy as sa
 from alembic import op
 
-try:
+if TYPE_CHECKING:  # pragma: no cover - typing import
     from pgvector.sqlalchemy import Vector  # type: ignore
 
     HAS_VECTOR = True
-except ModuleNotFoundError:  # pragma: no cover
-    HAS_VECTOR = False
+else:  # pragma: no cover - runtime import with fallback
+    try:
+        from pgvector.sqlalchemy import Vector  # type: ignore
 
-    class Vector(sa.types.JSON):  # type: ignore[type-arg]
-        def __init__(self, dim: int):  # noqa: D401 - mimic pgvector API
-            super().__init__()
-            self.dim = dim
+        HAS_VECTOR = True
+    except ModuleNotFoundError:
+        HAS_VECTOR = False
+
+        class Vector(sa.types.JSON):  # type: ignore[type-arg]
+            def __init__(self, dim: int):  # noqa: D401 - mimic pgvector API
+                super().__init__()
+                self.dim = dim
+
+            def bind_processor(self, dialect: Any):  # pragma: no cover - fallback helper
+                return None
 
 
 # revision identifiers, used by Alembic.

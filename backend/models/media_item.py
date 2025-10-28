@@ -3,27 +3,31 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlmodel import Column, Field, SQLModel
 
-try:  # pragma: no cover - optional dependency
+if TYPE_CHECKING:  # pragma: no cover - typing import
     from pgvector.sqlalchemy import Vector  # type: ignore
-except ModuleNotFoundError:  # pragma: no cover - optional dependency
-    from sqlalchemy.types import JSON, TypeDecorator
+else:  # pragma: no cover - runtime import with fallback
+    try:
+        from pgvector.sqlalchemy import Vector  # type: ignore
+    except ModuleNotFoundError:
+        from sqlalchemy.types import JSON, TypeDecorator
 
-    class Vector(TypeDecorator):  # type: ignore[type-arg]
-        impl = JSON
-        cache_ok = True
+        class Vector(TypeDecorator):  # type: ignore[type-arg]
+            impl = JSON
+            cache_ok = True
 
-        def __init__(self, dim: int):
-            super().__init__()
-            self.dim = dim
+            def __init__(self, dim: int):
+                super().__init__()
+                self.dim = dim
 
-        def process_bind_param(self, value, dialect):
-            return value
+            def process_bind_param(self, value: Any, dialect: Any) -> Any:
+                return value
 
-        def process_result_value(self, value, dialect):
-            return value
+            def process_result_value(self, value: Any, dialect: Any) -> Any:
+                return value
 
 
 class MediaItem(SQLModel, table=True):  # type: ignore[misc]

@@ -29,6 +29,7 @@ def test_vector_store_round_trip() -> None:
         session.add(media)
         session.commit()
         media_id = media.id
+        assert media_id is not None
 
     store = VectorStore(session_factory=SessionLocal)
     embedding = _build_embedding()

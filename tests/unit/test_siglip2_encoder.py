@@ -41,7 +41,7 @@ class DummyModel:
     def eval(self) -> DummyModel:
         return self
 
-    def __call__(self, **kwargs):
+    def __call__(self, **kwargs: object) -> DummyOutputs:
         return DummyOutputs()
 
 
