@@ -7,19 +7,15 @@ from typing import Any, cast
 
 from PIL import Image
 
-AutoModel: Any | None = None
-AutoProcessor: Any | None = None
 try:  # pragma: no cover - optional dependency
-    from transformers import AutoModel as _AutoModel  # type: ignore
-    from transformers import AutoProcessor as _AutoProcessor
+    from transformers import AutoModel as HF_AutoModel  # type: ignore
+    from transformers import AutoProcessor as HF_AutoProcessor
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
-    _AutoModel = None  # type: ignore[assignment]
-    _AutoProcessor = None  # type: ignore[assignment]
+    HF_AutoModel = None  # type: ignore[assignment]
+    HF_AutoProcessor = None  # type: ignore[assignment]
 
-if _AutoModel is not None:
-    AutoModel = cast(Any, _AutoModel)
-if _AutoProcessor is not None:
-    AutoProcessor = cast(Any, _AutoProcessor)
+TRANSFORMERS_AUTO_MODEL: Any | None = cast(Any, HF_AutoModel)
+TRANSFORMERS_AUTO_PROCESSOR: Any | None = cast(Any, HF_AutoProcessor)
 
 _DEFAULT_MODEL_NAME = "google/siglip-base-patch16-224"
 
@@ -44,11 +40,11 @@ class SigLIP2Encoder:
     ) -> None:
         if torch is None and model is None:
             raise RuntimeError("PyTorch is required to load SigLIP models. Install torch>=2.3.0.")
-        if AutoModel is None and model is None:
+        if TRANSFORMERS_AUTO_MODEL is None and model is None:
             raise RuntimeError(
                 "transformers is required to load SigLIP checkpoints. Install transformers>=4.44.0."
             )
-        if AutoProcessor is None and processor is None:
+        if TRANSFORMERS_AUTO_PROCESSOR is None and processor is None:
             raise RuntimeError(
                 "transformers is required to load SigLIP checkpoints. Install transformers>=4.44.0."
             )
@@ -58,14 +54,14 @@ class SigLIP2Encoder:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device or "cpu"
         if processor is None:
-            assert AutoProcessor is not None
-            resolved_processor = AutoProcessor.from_pretrained(model_name)
+            assert TRANSFORMERS_AUTO_PROCESSOR is not None
+            resolved_processor = TRANSFORMERS_AUTO_PROCESSOR.from_pretrained(model_name)
         else:
             resolved_processor = processor
 
         if model is None:
-            assert AutoModel is not None
-            resolved_model = AutoModel.from_pretrained(model_name)
+            assert TRANSFORMERS_AUTO_MODEL is not None
+            resolved_model = TRANSFORMERS_AUTO_MODEL.from_pretrained(model_name)
         else:
             resolved_model = model
 
