@@ -238,6 +238,7 @@ if HAS_MULTIPART:
         )
         matches = pipeline.find_candidates(payload, user_id=user_id)
         return {"results": matches}
+
 else:  # pragma: no cover - optional dependency guard
     logger.warning(
         "python-multipart is not installed; media upload and dedupe endpoints are disabled.",
