@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 const items = [
   { href: "/", label: "Dashboard" },
@@ -10,13 +10,7 @@ const items = [
   { href: "/help", label: "Help / Feedback" }
 ];
 export default function Sidebar() {
-  const [pathname, setPathname] = useState<string>("/");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setPathname(window.location.pathname);
-    }
-  }, []);
+  const pathname = usePathname() ?? "/";
 
   return (
     <aside className="hidden md:flex md:w-60 flex-col gap-1 p-4 bg-[var(--color-ui-backgroundAlt)] min-h-screen" aria-label="Primary">
