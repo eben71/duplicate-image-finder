@@ -12,17 +12,28 @@ export default function Modal({ open, title, description, children, actions, onC
   if (!open) return null;
   return (
     <div
-      aria-modal
-      role="presentation"
+      role={onClose ? "button" : "presentation"}
+      aria-label={onClose ? "Dismiss dialog backdrop" : undefined}
       className="fixed inset-0 z-50 grid place-items-center bg-black/45 px-4"
-      onClick={onClose}
+      onClick={(event) => {
+        if (!onClose || event.target !== event.currentTarget) return;
+        onClose();
+      }}
+      onKeyDown={(event) => {
+        if (!onClose || event.target !== event.currentTarget) return;
+        if (event.key === "Escape" || event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClose();
+        }
+      }}
+      tabIndex={onClose ? 0 : -1}
     >
       <div
         role="dialog"
+        aria-modal="true"
         aria-labelledby="modal-title"
         aria-describedby={description ? "modal-description" : undefined}
         className="w-[640px] max-w-full rounded-[var(--radius-lg)] bg-white p-[var(--space-xl)] shadow-[0_8px_16px_var(--color-shadow-high)]"
-        onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
           <div>

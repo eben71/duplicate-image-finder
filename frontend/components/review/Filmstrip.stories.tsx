@@ -19,7 +19,7 @@ type Story = StoryObj<typeof Filmstrip>;
 
 export const Default: Story = {
   render: function Render() {
-    const [active, setActive] = useState(items[0].id);
+    const [active, setActive] = useState(() => items[0]?.id ?? "");
     return <Filmstrip items={items} onSelect={setActive} activeId={active} />;
   }
 };

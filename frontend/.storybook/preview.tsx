@@ -1,4 +1,5 @@
-import type { Preview } from "@storybook/react";
+import React from "react";
+import { type Preview } from "@storybook/react";
 import ThemeProvider from "../theme/ThemeProvider";
 import "../app/globals.css";
 

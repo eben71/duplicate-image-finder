@@ -1,33 +1,54 @@
-# Byte-compiled / cache
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.so
-*.egg-info/
-.eggs/
-*.log
+# --- Node / JS ---
+node_modules/
+.pnpm-store/
+pnpm-debug.log*
+npm-debug.log*
+yarn-error.log*
+.tmp/
+.tmp-*
 
-# Environment
-.venv/
-venv/
-env/
+# Build / dist
+dist/
+build/
+.out/
+out/
 
-# Editor & OS
-.vscode/
-.idea/
+# --- Next.js ---
+.next/
+.next/cache/
+.vercel/
+storybook-static/
+
+# --- Tests / QA ---
+coverage/
+.playwright/
+test-results/
+playwright-report/
+blob-report/
+
+# --- Tooling caches ---
+.turbo/
+.eslintcache
+.stylelintcache
+
+# --- Env / secrets ---
+.env
+.env.*        # keep secrets out of git
+!.env.example # commit a template instead
+
+# --- OS / IDE ---
 .DS_Store
 Thumbs.db
-repomix-output.xml
+.vscode/
+.idea/
 
-# Pytest
-.pytest_cache/
-coverage/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Local DB data
-postgres_data/
-.env
+# --- Python backend ---
 .venv/
+__pycache__/
+*.py[cod]
+*.pytest_cache/
+.mypy_cache/
+
+# --- Docker / misc ---
+*.pid
+*.log
