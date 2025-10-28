@@ -85,8 +85,7 @@ class PDQFilter:
 
         if self.method == "pdq" and not HAS_PDQ:
             logger.warning(
-                "PDQ hashing requested but pdqhash bindings are unavailable; "
-                "using pHash fallback.",
+                "PDQ hashing requested but pdqhash bindings are unavailable; using pHash fallback.",
             )
 
         hash_hex = self._phash(img)

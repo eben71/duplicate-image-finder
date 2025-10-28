@@ -217,7 +217,6 @@ if HAS_MULTIPART:
             "embedding_dim": len(embedding),
         }
 
-
     @api_router.post("/dedupe/search/{user_id}", response_model=dict[str, Any])
     def dedupe_search(
         user_id: int,

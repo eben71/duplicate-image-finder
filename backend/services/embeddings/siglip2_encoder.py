@@ -33,18 +33,14 @@ class SigLIP2Encoder:
         model: Any | None = None,
     ) -> None:
         if torch is None and model is None:
-            raise RuntimeError(
-                "PyTorch is required to load SigLIP models. Install torch>=2.3.0."
-            )
+            raise RuntimeError("PyTorch is required to load SigLIP models. Install torch>=2.3.0.")
         if AutoModel is None and model is None:
             raise RuntimeError(
-                "transformers is required to load SigLIP checkpoints. Install "
-                "transformers>=4.44.0."
+                "transformers is required to load SigLIP checkpoints. Install transformers>=4.44.0."
             )
         if AutoProcessor is None and processor is None:
             raise RuntimeError(
-                "transformers is required to load SigLIP checkpoints. Install "
-                "transformers>=4.44.0."
+                "transformers is required to load SigLIP checkpoints. Install transformers>=4.44.0."
             )
 
         self.model_name = model_name
@@ -60,9 +56,8 @@ class SigLIP2Encoder:
             self.model.eval()
 
         config = getattr(self.model, "config", None)
-        self.output_dim = (
-            getattr(config, "projection_dim", None)
-            or getattr(config, "hidden_size", 768)
+        self.output_dim = getattr(config, "projection_dim", None) or getattr(
+            config, "hidden_size", 768
         )
 
     def embed_pil(self, img: Image.Image) -> list[float]:
@@ -90,9 +85,7 @@ class SigLIP2Encoder:
             else:
                 last_hidden = getattr(outputs, "last_hidden_state", None)
                 if last_hidden is None:
-                    raise RuntimeError(
-                        "Cannot extract image embeddings from SigLIP model output"
-                    )
+                    raise RuntimeError("Cannot extract image embeddings from SigLIP model output")
                 vector = last_hidden.mean(dim=1)
 
             vector = torch.nn.functional.normalize(vector, p=2, dim=-1)

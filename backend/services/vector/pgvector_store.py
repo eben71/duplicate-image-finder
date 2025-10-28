@@ -60,10 +60,7 @@ class VectorStore:
                     MediaItem.base_url,
                     MediaItem.mime_type,
                     MediaItem.creation_time,
-                    (
-                        1
-                        - func.cosine_distance(MediaItem.embedding, vector)
-                    ).label("similarity"),
+                    (1 - func.cosine_distance(MediaItem.embedding, vector)).label("similarity"),
                 )
                 .where(MediaItem.user_id == user_id)
                 .where(MediaItem.embedding.is_not(None))

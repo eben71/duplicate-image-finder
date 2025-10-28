@@ -15,6 +15,7 @@ except ModuleNotFoundError:  # pragma: no cover
             super().__init__()
             self.dim = dim
 
+
 # revision identifiers, used by Alembic.
 revision = "20250217_create_media_items_table"
 down_revision = None
