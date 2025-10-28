@@ -18,3 +18,7 @@ env/
 # Ignore test output and local migration history
 tests/
 backend/alembic/versions/
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/.next/

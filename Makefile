@@ -172,19 +172,22 @@ repomix:
 
 # ---------- Frontend (Next.js) ----------
 .PHONY: frontend-install frontend-dev frontend-test frontend-storybook frontend-coverage \
-        frontend-lint frontend-typecheck frontend-e2e
+        frontend-lint frontend-typecheck frontend-e2e frontend-build
 
 frontend-install:
-	cd $(FRONTEND_DIR) && $(PNPM) install
+        cd $(FRONTEND_DIR) && $(PNPM) install --frozen-lockfile
 
 frontend-dev:
-	cd $(FRONTEND_DIR) && $(PNPM) run dev
+        cd $(FRONTEND_DIR) && $(PNPM) run dev
 
 frontend-test:
-	cd $(FRONTEND_DIR) && $(PNPM) run test
+        cd $(FRONTEND_DIR) && $(PNPM) run test
+
+frontend-build:
+        cd $(FRONTEND_DIR) && $(PNPM) run build
 
 frontend-storybook:
-	cd $(FRONTEND_DIR) && $(PNPM) run storybook
+        cd $(FRONTEND_DIR) && $(PNPM) run storybook
 
 frontend-coverage:
 	cd $(FRONTEND_DIR) && $(PNPM) run test:coverage
