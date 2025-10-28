@@ -7,15 +7,17 @@ from typing import Any, cast
 
 from PIL import Image
 
-try:  # pragma: no cover - optional dependency
-    from transformers import AutoModel as HF_AutoModel  # type: ignore
-    from transformers import AutoProcessor as HF_AutoProcessor
-except ModuleNotFoundError:  # pragma: no cover - optional dependency
-    HF_AutoModel = None  # type: ignore[assignment]
-    HF_AutoProcessor = None  # type: ignore[assignment]
+def _load_transformers() -> tuple[Any | None, Any | None]:
+    """Best-effort import of transformers AutoModel/AutoProcessor."""
 
-TRANSFORMERS_AUTO_MODEL: Any | None = cast(Any, HF_AutoModel)
-TRANSFORMERS_AUTO_PROCESSOR: Any | None = cast(Any, HF_AutoProcessor)
+    try:  # pragma: no cover - optional dependency
+        from transformers import AutoModel, AutoProcessor  # type: ignore
+    except ModuleNotFoundError:  # pragma: no cover - optional dependency
+        return None, None
+    return cast(Any, AutoModel), cast(Any, AutoProcessor)
+
+
+TRANSFORMERS_AUTO_MODEL, TRANSFORMERS_AUTO_PROCESSOR = _load_transformers()
 
 _DEFAULT_MODEL_NAME = "google/siglip-base-patch16-224"
 
