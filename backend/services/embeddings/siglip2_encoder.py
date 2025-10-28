@@ -7,8 +7,8 @@ from typing import Any, cast
 
 from PIL import Image
 
-AutoModel: Any
-AutoProcessor: Any
+AutoModel: Any | None = None
+AutoProcessor: Any | None = None
 try:  # pragma: no cover - optional dependency
     from transformers import AutoModel as _AutoModel  # type: ignore
     from transformers import AutoProcessor as _AutoProcessor
@@ -16,8 +16,10 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
     _AutoModel = None  # type: ignore[assignment]
     _AutoProcessor = None  # type: ignore[assignment]
 
-AutoModel = cast(Any, _AutoModel)
-AutoProcessor = cast(Any, _AutoProcessor)
+if _AutoModel is not None:
+    AutoModel = cast(Any, _AutoModel)
+if _AutoProcessor is not None:
+    AutoProcessor = cast(Any, _AutoProcessor)
 
 _DEFAULT_MODEL_NAME = "google/siglip-base-patch16-224"
 
@@ -55,8 +57,20 @@ class SigLIP2Encoder:
         if torch is not None and device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device or "cpu"
-        self.processor = processor or AutoProcessor.from_pretrained(model_name)
-        self.model = model or AutoModel.from_pretrained(model_name)
+        if processor is None:
+            assert AutoProcessor is not None
+            resolved_processor = AutoProcessor.from_pretrained(model_name)
+        else:
+            resolved_processor = processor
+
+        if model is None:
+            assert AutoModel is not None
+            resolved_model = AutoModel.from_pretrained(model_name)
+        else:
+            resolved_model = model
+
+        self.processor = resolved_processor
+        self.model = resolved_model
 
         if hasattr(self.model, "to"):
             self.model.to(self.device)
