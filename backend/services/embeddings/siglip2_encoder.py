@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, List, Optional
-
 import io
+from typing import Any, cast
 
 from PIL import Image
 
@@ -28,17 +27,25 @@ class SigLIP2Encoder:
     def __init__(
         self,
         model_name: str = _DEFAULT_MODEL_NAME,
-        device: Optional[str] = None,
+        device: str | None = None,
         *,
-        processor: Optional[Any] = None,
-        model: Optional[Any] = None,
+        processor: Any | None = None,
+        model: Any | None = None,
     ) -> None:
         if torch is None and model is None:
-            raise RuntimeError("PyTorch is required to load SigLIP models. Install torch>=2.3.0.")
+            raise RuntimeError(
+                "PyTorch is required to load SigLIP models. Install torch>=2.3.0."
+            )
         if AutoModel is None and model is None:
-            raise RuntimeError("transformers is required to load SigLIP checkpoints. Install transformers>=4.44.0.")
+            raise RuntimeError(
+                "transformers is required to load SigLIP checkpoints. Install "
+                "transformers>=4.44.0."
+            )
         if AutoProcessor is None and processor is None:
-            raise RuntimeError("transformers is required to load SigLIP checkpoints. Install transformers>=4.44.0.")
+            raise RuntimeError(
+                "transformers is required to load SigLIP checkpoints. Install "
+                "transformers>=4.44.0."
+            )
 
         self.model_name = model_name
         if torch is not None and device is None:
@@ -53,14 +60,17 @@ class SigLIP2Encoder:
             self.model.eval()
 
         config = getattr(self.model, "config", None)
-        self.output_dim = getattr(config, "projection_dim", None) or getattr(config, "hidden_size", 768)
+        self.output_dim = (
+            getattr(config, "projection_dim", None)
+            or getattr(config, "hidden_size", 768)
+        )
 
-    def embed_pil(self, img: Image.Image) -> List[float]:
+    def embed_pil(self, img: Image.Image) -> list[float]:
         if torch is None:
             raise RuntimeError("PyTorch is required to compute embeddings.")
 
         @torch.no_grad()
-        def _forward() -> List[float]:
+        def _forward() -> list[float]:
             batch = self.processor(images=img, return_tensors="pt")
             batch = self._move_to_device(batch)
 
@@ -76,11 +86,13 @@ class SigLIP2Encoder:
             if hasattr(outputs, "image_embeds"):
                 vector = outputs.image_embeds
             elif hasattr(self.model, "get_image_features"):
-                vector = self.model.get_image_features(**inputs)  # type: ignore[misc]
+                vector = cast(Any, self.model).get_image_features(**inputs)
             else:
                 last_hidden = getattr(outputs, "last_hidden_state", None)
                 if last_hidden is None:
-                    raise RuntimeError("Cannot extract image embeddings from SigLIP model output")
+                    raise RuntimeError(
+                        "Cannot extract image embeddings from SigLIP model output"
+                    )
                 vector = last_hidden.mean(dim=1)
 
             vector = torch.nn.functional.normalize(vector, p=2, dim=-1)
@@ -97,6 +109,6 @@ class SigLIP2Encoder:
 
         return inputs
 
-    def embed_bytes(self, image_bytes: bytes) -> List[float]:
+    def embed_bytes(self, image_bytes: bytes) -> list[float]:
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         return self.embed_pil(img)

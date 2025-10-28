@@ -16,7 +16,7 @@ class DummyBatch:
     def __init__(self) -> None:
         self.data = {"pixel_values": torch.ones((1, 3, 4, 4))}
 
-    def to(self, device: str) -> "DummyBatch":
+    def to(self, device: str) -> DummyBatch:
         return self
 
 
@@ -35,10 +35,10 @@ class DummyModel:
     def __init__(self) -> None:
         self.config = SimpleNamespace(projection_dim=3)
 
-    def to(self, device: str) -> "DummyModel":
+    def to(self, device: str) -> DummyModel:
         return self
 
-    def eval(self) -> "DummyModel":
+    def eval(self) -> DummyModel:
         return self
 
     def __call__(self, **kwargs):

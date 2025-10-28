@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 from sqlalchemy.orm import sessionmaker
-from sqlmodel import SQLModel, Session, create_engine
+from sqlmodel import Session, SQLModel, create_engine
 
 from backend.models.media_item import MediaItem
 from backend.services.vector.pgvector_store import VectorStore

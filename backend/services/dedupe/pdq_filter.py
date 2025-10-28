@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
-
 import io
 import logging
 
@@ -30,7 +28,7 @@ class PDQFilter:
     def __init__(self, method: str = "auto") -> None:
         self.method = method
 
-    def _pdq_hash(self, pil_img: Image.Image) -> Tuple[str, int]:
+    def _pdq_hash(self, pil_img: Image.Image) -> tuple[str, int]:
         """Return ``(hash_hex, quality)`` using a PDQ implementation if available."""
 
         if not HAS_PDQ or pdqhash is None:  # pragma: no cover - guarded by caller
@@ -60,7 +58,7 @@ class PDQFilter:
     def _phash(self, pil_img: Image.Image) -> str:
         return str(imagehash.phash(pil_img))
 
-    def compute_hash(self, image_bytes: bytes) -> Tuple[str, Optional[int], str]:
+    def compute_hash(self, image_bytes: bytes) -> tuple[str, int | None, str]:
         """Return ``(hash_hex, quality_or_none, backend_used)``."""
 
         img = Image.open(io.BytesIO(image_bytes))
@@ -80,13 +78,15 @@ class PDQFilter:
         global _warned_pdq_missing
         if (self.method in {"auto", "pdq"}) and not HAS_PDQ and not _warned_pdq_missing:
             logger.warning(
-                "pdqhash bindings are unavailable; PDQFilter will fall back to imagehash.pHash until installed.",
+                "pdqhash bindings are unavailable; PDQFilter will fall back to "
+                "imagehash.pHash until installed.",
             )
             _warned_pdq_missing = True
 
         if self.method == "pdq" and not HAS_PDQ:
             logger.warning(
-                "PDQ hashing requested but pdqhash bindings are unavailable; using pHash fallback.",
+                "PDQ hashing requested but pdqhash bindings are unavailable; "
+                "using pHash fallback.",
             )
 
         hash_hex = self._phash(img)

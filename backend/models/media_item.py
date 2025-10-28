@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from sqlmodel import Column, Field, SQLModel
 
@@ -35,16 +34,16 @@ class MediaItem(SQLModel, table=True):  # type: ignore[misc]
         "validate_default": True,
     }
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(index=True)
     google_media_item_id: str = Field(index=True, unique=True)
-    filename: Optional[str] = Field(default=None)
-    base_url: Optional[str] = Field(default=None)
-    mime_type: Optional[str] = Field(default=None)
-    creation_time: Optional[datetime] = Field(default=None, index=True)
+    filename: str | None = Field(default=None)
+    base_url: str | None = Field(default=None)
+    mime_type: str | None = Field(default=None)
+    creation_time: datetime | None = Field(default=None, index=True)
 
-    embedding: Optional[list[float]] = Field(
+    embedding: list[float] | None = Field(
         default=None,
         sa_column=Column(Vector(dim=768)),
     )
-    pdq_hash: Optional[str] = Field(default=None, index=True)
+    pdq_hash: str | None = Field(default=None, index=True)

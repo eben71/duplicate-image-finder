@@ -1,7 +1,7 @@
 """create media items table and vector index"""
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 try:
     from pgvector.sqlalchemy import Vector  # type: ignore
@@ -40,7 +40,12 @@ def upgrade() -> None:
     )
 
     op.create_index("ix_media_items_user_id", "media_items", ["user_id"])
-    op.create_index("ix_media_items_google_media_item_id", "media_items", ["google_media_item_id"], unique=True)
+    op.create_index(
+        "ix_media_items_google_media_item_id",
+        "media_items",
+        ["google_media_item_id"],
+        unique=True,
+    )
     op.create_index("ix_media_items_creation_time", "media_items", ["creation_time"])
     op.create_index("ix_media_items_pdq_hash", "media_items", ["pdq_hash"])
     if HAS_VECTOR:

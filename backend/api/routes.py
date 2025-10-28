@@ -1,5 +1,6 @@
 import logging
 from functools import lru_cache
+from importlib.util import find_spec
 from typing import Annotated, Any
 
 import httpx
@@ -11,21 +12,16 @@ from backend.config.settings import settings
 from backend.db.session import SessionLocal, get_session
 from backend.deps import get_http_client
 from backend.models.enums import IngestionMode
+from backend.models.media_item import MediaItem
 from backend.models.schemas.user import UserRead
 from backend.models.user import User
+from backend.services.dedupe import DedupePipeline, PDQFilter
+from backend.services.embeddings import SigLIP2Encoder
 from backend.services.ingestion.google_photos import fetch_images_by_year
 from backend.services.vector import VectorStore
-from backend.services.embeddings import SigLIP2Encoder
-from backend.services.dedupe import DedupePipeline, PDQFilter
-from backend.models.media_item import MediaItem
 from core.google_oauth import exchange_code_for_token, get_google_auth_url
 
-try:  # pragma: no cover - optional dependency
-    import multipart  # type: ignore
-
-    HAS_MULTIPART = True
-except ModuleNotFoundError:  # pragma: no cover - optional dependency
-    HAS_MULTIPART = False
+HAS_MULTIPART = find_spec("multipart") is not None
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -173,12 +169,12 @@ async def ingest_photos_for_dev(
     }
 
 
-@lru_cache()
+@lru_cache
 def get_siglip2_encoder() -> SigLIP2Encoder:
     return SigLIP2Encoder()
 
 
-@lru_cache()
+@lru_cache
 def get_vector_store() -> VectorStore:
     return VectorStore(session_factory=SessionLocal)
 
@@ -189,7 +185,7 @@ if HAS_MULTIPART:
     def embed_media_item(
         media_item_id: int,
         session: Annotated[Session, Depends(get_session)],
-        file: UploadFile = File(...),
+        file: Annotated[UploadFile, File(...)],
     ) -> dict[str, Any]:
         media_item = session.get(MediaItem, media_item_id)
         if media_item is None:
@@ -207,7 +203,11 @@ if HAS_MULTIPART:
         embedding = encoder.embed_bytes(payload)
 
         vector_store = get_vector_store()
-        vector_store.upsert_embedding(media_item_id=media_item_id, embedding=embedding, pdq_hash=pdq_hash)
+        vector_store.upsert_embedding(
+            media_item_id=media_item_id,
+            embedding=embedding,
+            pdq_hash=pdq_hash,
+        )
 
         return {
             "status": "ok",
@@ -222,7 +222,7 @@ if HAS_MULTIPART:
     def dedupe_search(
         user_id: int,
         session: Annotated[Session, Depends(get_session)],
-        file: UploadFile = File(...),
+        file: Annotated[UploadFile, File(...)],
     ) -> dict[str, Any]:
         user = session.get(User, user_id)
         if user is None:
@@ -233,7 +233,10 @@ if HAS_MULTIPART:
         if not payload:
             raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
-        pipeline = DedupePipeline(vector_store=get_vector_store(), encoder=get_siglip2_encoder())
+        pipeline = DedupePipeline(
+            vector_store=get_vector_store(),
+            encoder=get_siglip2_encoder(),
+        )
         matches = pipeline.find_candidates(payload, user_id=user_id)
         return {"results": matches}
 else:  # pragma: no cover - optional dependency guard
