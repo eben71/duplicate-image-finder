@@ -7,6 +7,8 @@ from typing import Any, cast
 
 from PIL import Image
 
+AutoModel: Any
+AutoProcessor: Any
 try:  # pragma: no cover - optional dependency
     from transformers import AutoModel as _AutoModel  # type: ignore
     from transformers import AutoProcessor as _AutoProcessor
