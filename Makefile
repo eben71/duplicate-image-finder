@@ -16,7 +16,7 @@ COV = $(PY) -m coverage
 
 .PHONY: build up down restart logs health \
         reset-db init-db alembic migrate shell celery \
-    tests-unit tests-int tests-debug tests-smoke tests-all tests tests-coverage \
+    tests-unit tests-int tests-debug tests-smoke tests-all tests tests-coverage tests-dedupe \
     install-deps install-dev-deps check-versions \
     format lint typecheck ci update-python repomix \
     frontend-install frontend-dev frontend-test frontend-storybook frontend-coverage
@@ -69,6 +69,9 @@ celery:
 # Fast unit tests (no docker). Pytest default markers from pytest.ini apply.
 tests-unit:
 	$(ACTIVATE); pytest -m "not integration and not e2e and not debug"
+
+tests-dedupe:
+	$(ACTIVATE); pytest tests/unit/test_pdq_filter.py tests/unit/test_siglip2_encoder.py tests/unit/test_pgvector_store.py
 
 # Integration tests via your existing compose recipe
 tests-int:

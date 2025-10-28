@@ -20,9 +20,6 @@ env/
 Thumbs.db
 repomix-output.xml
 
-# Alembic
-backend/alembic/versions/*.py
-
 # Pytest
 .pytest_cache/
 coverage/
