@@ -63,7 +63,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    command: pnpm dev -- -H 0.0.0.0 -p 3000
+    entrypoint: ["/bin/sh", "-lc"]
+    command: >-
+      if [ ! -d node_modules ]; then
+        pnpm install --frozen-lockfile;
+      fi &&
+      pnpm dev -- -H 0.0.0.0 -p 3000
     working_dir: /app/frontend
     volumes:
       - ./frontend:/app/frontend
