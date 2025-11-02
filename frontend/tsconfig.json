@@ -17,9 +17,10 @@
       "@layout/*": ["components/layout/*"],
       "@review/*": ["components/review/*"],
       "@theme/*": ["theme/*"],
-      "@lib/*": ["lib/*"]
+      "@lib/*": ["lib/*"],
+      "vite/client": ["types/vite-client"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts"],
+  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts", "types/**/*.d.ts"],
   "exclude": ["node_modules", ".next", "dist"]
 }
