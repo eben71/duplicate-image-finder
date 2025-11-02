@@ -10,7 +10,7 @@ Pillow>=11.3.0
 psycopg2-binary==2.9.11
 pgvector>=0.2.5
 pydantic==2.12.3
-pydantic_core==2.23.4
+pydantic-core==2.41.4
 pydantic-settings==2.5.2
 python-dotenv==1.2.1
 python-multipart>=0.0.9
