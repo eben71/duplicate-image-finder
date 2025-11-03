@@ -1,8 +1,8 @@
-alembic==1.17.0
+alembic==1.17.1
 celery==5.5.3
 cryptography==45.0.7
 email-validator==2.3.0
-fastapi==0.120.0
+fastapi==0.120.4
 httpx==0.28.1
 ImageHash>=4.3.2
 numpy==2.3.4
