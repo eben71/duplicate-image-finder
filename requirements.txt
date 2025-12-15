@@ -2,7 +2,7 @@ alembic==1.17.2
 celery==5.6.0
 cryptography==45.0.7
 email-validator==2.3.0
-fastapi==0.123.0
+fastapi==0.124.4
 httpx==0.28.1
 ImageHash>=4.3.2
 numpy==2.3.5
@@ -16,7 +16,7 @@ python-dotenv==1.2.1
 python-multipart>=0.0.9
 redis==5.3.1
 scikit-image==0.25.2
-SQLAlchemy==2.0.44
+SQLAlchemy==2.0.45
 sqlmodel==0.0.27
 torch>=2.3.0
 torchvision>=0.18.0
